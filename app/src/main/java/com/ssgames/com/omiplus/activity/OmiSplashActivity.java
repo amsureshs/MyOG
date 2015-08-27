@@ -24,7 +24,7 @@ public class OmiSplashActivity extends Activity {
                 startActivity(mainIntent);
                 finish();
             }
-        }, 800);
+        }, 3000);
     }
 
     @Override
