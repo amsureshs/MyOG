@@ -2,4 +2,6 @@
     <string name="app_name">Omi Plus</string>
 
     <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="dummy_content_splash">SPLASH\nSCREEN</string>
+
 </resources>
