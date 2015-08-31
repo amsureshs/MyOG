@@ -4,4 +4,11 @@
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="dummy_content_splash">SPLASH\nSCREEN</string>
 
+    <string name="host_game">Host Game</string>
+    <string name="join_game">Join Game</string>
+    <string name="title_activity_omi_game">OmiGameActivity</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+
 </resources>
