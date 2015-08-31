@@ -2,5 +2,10 @@
 
     <color name="black_overlay">#66000000</color>
     <color name="black">#000000</color>
+    <color name="white">#ffffff</color>
+    <color name="blue_theme">#0099cc</color>
+    <color name="blue_dark">#2E2EFE</color>
+    <color name="blue_light">#A9E2F3</color>
+
 
 </resources>

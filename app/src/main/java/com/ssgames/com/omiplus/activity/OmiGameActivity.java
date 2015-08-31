@@ -13,28 +13,41 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
 import com.ssgames.com.omiplus.R;
+import com.ssgames.com.omiplus.bluetooth.BTConnection;
+import com.ssgames.com.omiplus.bluetooth.BTConnectionHandler;
+import com.ssgames.com.omiplus.bluetooth.BTConnectionListener;
 import com.ssgames.com.omiplus.util.Constants;
 import com.ssgames.com.omiplus.util.SettingsManager;
 
-public class OmiGameActivity extends Activity {
+import java.util.ArrayList;
+
+public class OmiGameActivity extends Activity implements BTConnectionListener {
+
+    private static final String TAG = OmiGameActivity.class.getSimpleName();
 
     private static final int REQUEST_ENABLE_BT = 1;
 
     private boolean bluetoothIsUsing = false;
 
     private AlertDialog mAlertDialog = null;
+
     private boolean mIsHostGame = false;
     private BluetoothAdapter mBTAdapter = null;
+    private BTConnectionHandler mBtConnectionHandler = null;
 
 
     //nickname
     private AlertDialog mNickNameDialog = null;
     private String oldTextVal = "";
     private TextWatcher textWatcher = null;
+
+    //Join
+    private ArrayList<BluetoothDevice> discoveredList = null;
 
     /*
 	 * Bluetooth broadcast receiver
@@ -43,10 +56,15 @@ public class OmiGameActivity extends Activity {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                BluetoothDevice device = intent
-                        .getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                if (device.getBluetoothClass().getDeviceClass() == BluetoothClass.Device.PHONE_SMART) {
-                    //bluetoothDeviceFound(device);
+
+                if (!mIsHostGame) {
+                    BluetoothDevice device = intent
+                            .getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                    if (device.getBluetoothClass().getDeviceClass() == BluetoothClass.Device.PHONE_SMART
+                            && device.getName().contains("Join Omi")) {
+                        bluetoothDeviceFound(device);
+                        Log.v(TAG,"Hosted device found");
+                    }
                 }
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED
                     .equals(action)) {
@@ -55,13 +73,13 @@ public class OmiGameActivity extends Activity {
             } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
                 BluetoothDevice device = intent
                         .getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                //btConnectionHandler.removeDisconnectedReomteConnection(device);
+                mBtConnectionHandler.removeDisconnectedRemoteConnection(device);
                 //connectionList = btConnectionHandler.getConnectionList();
                 //refreshViews();
             } else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
                 BluetoothDevice device = intent
                         .getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                //btConnectionHandler.addRemoteDeviceIfNotExist(device);
+                mBtConnectionHandler.addRemoteDeviceIfNotExist(device);
                 //connectionList = btConnectionHandler.getConnectionList();
                 //refreshViews();
             }
@@ -112,6 +130,9 @@ public class OmiGameActivity extends Activity {
             }else {
                 resetJoinBluetoothName();
             }
+
+            mBtConnectionHandler.removeConnectionListener(this);
+            mBtConnectionHandler.clear();
 
             if (mBTAdapter != null) {
                 mBTAdapter.cancelDiscovery();
@@ -177,17 +198,28 @@ public class OmiGameActivity extends Activity {
 
     private void startBluetoothServices() {
 
+        mBtConnectionHandler = BTConnectionHandler.getSharedInstance();
+        mBtConnectionHandler.addConnectionListener(this);
+
+
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
         if (mIsHostGame) {
 
         }else {
-
+            filter.addAction(BluetoothDevice.ACTION_FOUND);
         }
 
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
-        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
         this.registerReceiver(mReceiver, filter);
+
+        if (mIsHostGame) {
+            mBtConnectionHandler.workAsHost = true;
+            mBtConnectionHandler.startListenIncomingConnections();
+            enableDiscoverable();
+        }else {
+            searchHostedGame();
+        }
     }
 
     /*
@@ -279,6 +311,13 @@ public class OmiGameActivity extends Activity {
         SettingsManager.addSetting(Constants.UserKey.NEW_BT_NAME, "", getApplicationContext());
     }
 
+    private void enableDiscoverable() {
+        Intent discoverableIntent = new
+                Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
+        startActivity(discoverableIntent);
+    }
+
     /*
 	 * Join game config
 	 */
@@ -301,4 +340,60 @@ public class OmiGameActivity extends Activity {
         SettingsManager.addSetting(Constants.UserKey.NEW_BT_NAME, "", getApplicationContext());
     }
 
+    private void searchHostedGame() {
+        if (mBTAdapter.isDiscovering()) {
+            mBTAdapter.cancelDiscovery();
+        }
+
+        mBTAdapter.startDiscovery();
+    }
+
+    private void bluetoothDeviceFound(BluetoothDevice device) {
+        if (discoveredList == null) {
+            discoveredList = new ArrayList<>();
+        }
+
+        if (!discoveredList.contains(device)) {
+            discoveredList.add(device);
+            refreshJoinListView();
+        }
+    }
+
+    private void refreshJoinListView() {
+
+    }
+
+
+    /*
+	 * BTConnectionListener methods
+	 */
+    @Override
+    public void connectionEstablished(BTConnection connection) {
+
+    }
+
+    @Override
+    public void connectionDisconnected(BluetoothDevice device) {
+
+    }
+
+    @Override
+    public void deviceNotConnected(BluetoothDevice device) {
+
+    }
+
+    @Override
+    public void dataReceived(BTConnection connection, byte[] buffer) {
+
+    }
+
+    @Override
+    public void dataDidSend(BTConnection connection) {
+
+    }
+
+    @Override
+    public void dataDidNotSend(BTConnection connection, byte[] buffer) {
+
+    }
 }

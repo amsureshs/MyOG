@@ -18,7 +18,7 @@ public class BTConnectionHandler implements BTConnectThreadListener,
 
 	private int maxConnections = 3;
 	private int connectedCount = 0;
-	private boolean workAsHost = false;
+	public boolean workAsHost = false;
 	private AcceptThread acceptThread = null;
 
 	private ArrayList<BTConnection> connectionList = null;
