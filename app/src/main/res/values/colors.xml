@@ -6,6 +6,8 @@
     <color name="blue_theme">#0099cc</color>
     <color name="blue_dark">#2E2EFE</color>
     <color name="blue_light">#A9E2F3</color>
+    <color name="clear_color">#00000000</color>
+
 
 
 </resources>

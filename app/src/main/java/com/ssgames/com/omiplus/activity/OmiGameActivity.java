@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
@@ -23,6 +24,8 @@ import com.ssgames.com.omiplus.bluetooth.BTConnectionHandler;
 import com.ssgames.com.omiplus.bluetooth.BTConnectionListener;
 import com.ssgames.com.omiplus.util.Constants;
 import com.ssgames.com.omiplus.util.SettingsManager;
+import com.ssgames.com.omiplus.views.OmiHostView;
+import com.ssgames.com.omiplus.views.OmiJoinView;
 
 import java.util.ArrayList;
 
@@ -31,6 +34,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
     private static final String TAG = OmiGameActivity.class.getSimpleName();
 
     private static final int REQUEST_ENABLE_BT = 1;
+    private static final int REQUEST_ENABLE_BT_DISCOVERY = 2;
 
     private boolean bluetoothIsUsing = false;
 
@@ -49,6 +53,13 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
     //Join
     private ArrayList<BluetoothDevice> discoveredList = null;
 
+    //UIs
+    private LinearLayout mGameLayout = null;
+    private LinearLayout mPopupLayout = null;
+
+    private OmiJoinView mOmiJoinView = null;
+    private OmiHostView mOmiHostView = null;
+
     /*
 	 * Bluetooth broadcast receiver
 	 */
@@ -56,20 +67,26 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-
                 if (!mIsHostGame) {
                     BluetoothDevice device = intent
                             .getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     if (device.getBluetoothClass().getDeviceClass() == BluetoothClass.Device.PHONE_SMART
                             && device.getName().contains("Join Omi")) {
                         bluetoothDeviceFound(device);
-                        Log.v(TAG,"Hosted device found");
                     }
                 }
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED
                     .equals(action)) {
-                //txtSearch.setText("SEARCH FOR DEVICES");
-                //refreshViews();
+                if (!mIsHostGame) {
+                    searchingFinished();
+                }
+            } else if (BluetoothAdapter.ACTION_SCAN_MODE_CHANGED
+                    .equals(action)) {
+                if (mIsHostGame) {
+                    if (intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE, BluetoothAdapter.SCAN_MODE_NONE) == BluetoothAdapter.SCAN_MODE_NONE) {
+                        discoverableFinished();
+                    }
+                }
             } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
                 BluetoothDevice device = intent
                         .getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
@@ -90,6 +107,10 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_omi_game);
+
+        mGameLayout = (LinearLayout)findViewById(R.id.gameLayout);
+        mPopupLayout = (LinearLayout)findViewById(R.id.popupLayout);
+        mPopupLayout.setVisibility(View.GONE);
 
         Intent intent = getIntent();
         mIsHostGame = intent.getBooleanExtra(Constants.ExtraKey.EXTRA_KEY_HOST_OR_JOIN, false);
@@ -142,7 +163,6 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
                 this.unregisterReceiver(mReceiver);
             }catch (Exception e){}
         }
-
     }
 
     @Override
@@ -156,6 +176,23 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle("Sorry!");
                 builder.setMessage("Bluetooth not enabled.");
+                builder.setNegativeButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        mAlertDialog.dismiss();
+                        noBluetoothAndEndGame();
+                    }
+                });
+                mAlertDialog = builder.create();
+                mAlertDialog.setCanceledOnTouchOutside(false);
+                mAlertDialog.setCancelable(false);
+                mAlertDialog.show();
+            }
+        }else if (requestCode == REQUEST_ENABLE_BT_DISCOVERY) {
+            if (resultCode == RESULT_CANCELED) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Sorry!");
+                builder.setMessage("Your device should discoverable to other devices to join your game.");
                 builder.setNegativeButton("Ok", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -204,10 +241,10 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
 
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED);
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
-        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
         if (mIsHostGame) {
-
+            filter.addAction(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED);
         }else {
+            filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
             filter.addAction(BluetoothDevice.ACTION_FOUND);
         }
 
@@ -216,9 +253,39 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
         if (mIsHostGame) {
             mBtConnectionHandler.workAsHost = true;
             mBtConnectionHandler.startListenIncomingConnections();
+
+            mOmiHostView = new OmiHostView(OmiGameActivity.this, new OmiHostView.OmiHostViewListener() {
+                @Override
+                public void visibleButtonTapped() {
+                    enableDiscoverable();
+                }
+
+                @Override
+                public void partnerSelected(String partnerName) {
+                    //TODO
+                }
+            });
+
+            mPopupLayout.addView(mOmiHostView);
+            mPopupLayout.setVisibility(View.VISIBLE);
             enableDiscoverable();
         }else {
-            searchHostedGame();
+
+            mOmiJoinView = new OmiJoinView(OmiGameActivity.this, new OmiJoinView.OmiJoinViewListener() {
+                @Override
+                public void searchButtonTapped() {
+                    searchHostedGames();
+                }
+
+                @Override
+                public void gameSelected(String gameName) {
+                    connectPlayerToHost(gameName);
+                }
+            });
+
+            mPopupLayout.addView(mOmiJoinView);
+            mPopupLayout.setVisibility(View.VISIBLE);
+            searchHostedGames();
         }
     }
 
@@ -315,7 +382,37 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
         Intent discoverableIntent = new
                 Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
         discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
-        startActivity(discoverableIntent);
+        startActivityForResult(discoverableIntent, REQUEST_ENABLE_BT_DISCOVERY);
+
+        if (mOmiHostView != null) {
+            mOmiHostView.visibilityStarted();
+        }
+    }
+
+    private void discoverableFinished() {
+        if (mOmiHostView != null) {
+            mOmiHostView.visibilityFinished();
+        }
+    }
+
+    private void updateConnectedPartners() {
+        ArrayList<BTConnection> connectedList = mBtConnectionHandler.getConnectionList();
+
+        if (mOmiHostView != null) {
+            String[] partners = new String[connectedList.size()];
+            int i = 0;
+            for (BTConnection btConnection : connectedList) {
+                BluetoothDevice device = btConnection.getBtDevice();
+                partners[i] = device.getName();
+                i++;
+            }
+
+            mOmiHostView.addPartners(partners);
+        }
+
+        if (connectedList.size() == 3) {
+            mOmiHostView.showPartnerSelection();
+        }
     }
 
     /*
@@ -340,12 +437,21 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
         SettingsManager.addSetting(Constants.UserKey.NEW_BT_NAME, "", getApplicationContext());
     }
 
-    private void searchHostedGame() {
+    private void searchHostedGames() {
         if (mBTAdapter.isDiscovering()) {
             mBTAdapter.cancelDiscovery();
         }
 
         mBTAdapter.startDiscovery();
+        if (mOmiJoinView != null) {
+            mOmiJoinView.searchStarted();
+        }
+    }
+
+    private void searchingFinished() {
+        if (mOmiJoinView != null && mOmiJoinView.getVisibility() == View.VISIBLE) {
+            mOmiJoinView.searchFinished();
+        }
     }
 
     private void bluetoothDeviceFound(BluetoothDevice device) {
@@ -360,7 +466,34 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
     }
 
     private void refreshJoinListView() {
+        if (mOmiJoinView != null) {
+            String[] hostedGames = new String[discoveredList.size()];
+            int i = 0;
+            for (BluetoothDevice device : discoveredList) {
+                hostedGames[i] = device.getName();
+                i++;
+            }
 
+            mOmiJoinView.addGames(hostedGames);
+        }
+    }
+
+    private void connectPlayerToHost(String hostName) {
+        BluetoothDevice gameDevice = null;
+        for (BluetoothDevice device : discoveredList) {
+            if(device.getName().equalsIgnoreCase(hostName)) {
+                gameDevice = device;
+                break;
+            }
+        }
+
+        if (gameDevice != null) {
+            mBtConnectionHandler.connectDevice(gameDevice);
+        }
+    }
+
+    private void connectedToHostedGame() {
+        //TODO
     }
 
 
@@ -370,6 +503,17 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
     @Override
     public void connectionEstablished(BTConnection connection) {
 
+        runOnUiThread(new Runnable() {
+
+            @Override
+            public void run() {
+                if (mIsHostGame) {
+                    updateConnectedPartners();
+                }else {
+                    connectedToHostedGame();
+                }
+            }
+        });
     }
 
     @Override
