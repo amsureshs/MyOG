@@ -62,6 +62,8 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
 
     private boolean preventGoBack = true;
 
+    private BTConnection playerOneConnection = null;
+
     /*
 	 * Bluetooth broadcast receiver
 	 */
@@ -93,14 +95,10 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
                 BluetoothDevice device = intent
                         .getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 mBtConnectionHandler.removeDisconnectedRemoteConnection(device);
-                //connectionList = btConnectionHandler.getConnectionList();
-                //refreshViews();
             } else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
                 BluetoothDevice device = intent
                         .getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 mBtConnectionHandler.addRemoteDeviceIfNotExist(device);
-                //connectionList = btConnectionHandler.getConnectionList();
-                //refreshViews();
             }
         }
     };
@@ -296,7 +294,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
 
                 @Override
                 public void partnerSelected(String partnerName) {
-                    //TODO
+                    partnerSelectedAndPartnersAreReady(partnerName);
                 }
             });
 
@@ -402,6 +400,14 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
         SettingsManager.addSetting(Constants.UserKey.NEW_BT_NAME, newBtName, getApplicationContext());
     }
 
+    private void changeHostBluetoothNickName() {
+        String nickName = SettingsManager.getSetting(Constants.UserKey.NICK_NAME, "", getApplicationContext());
+
+        mBTAdapter.setName(nickName);
+
+        SettingsManager.addSetting(Constants.UserKey.NEW_BT_NAME, nickName, getApplicationContext());
+    }
+
     private void resetHostBluetoothName() {
         String oldBtName = SettingsManager.getSetting(Constants.UserKey.ORI_BT_NAME, "", getApplicationContext());
         if (oldBtName.length() > 0) {
@@ -444,9 +450,19 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
             mOmiHostView.addPartners(partners);
         }
 
-        if (connectedList.size() == 2) {
+        if (connectedList.size() == 3) {
             mOmiHostView.showPartnerSelection();
         }
+    }
+
+    private void partnerSelectedAndPartnersAreReady(String partnerName) {
+        changeHostBluetoothNickName();
+
+        if (mOmiHostView != null) {
+            mPopupLayout.removeView(mOmiHostView);
+            mOmiHostView = null;
+        }
+        mPopupLayout.setVisibility(View.GONE);
     }
 
     /*
@@ -531,7 +547,6 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
             mPopupLayout.removeView(mOmiJoinView);
             mOmiJoinView = null;
         }
-
         mPopupLayout.setVisibility(View.GONE);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
