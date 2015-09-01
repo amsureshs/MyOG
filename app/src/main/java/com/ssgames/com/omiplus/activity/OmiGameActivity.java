@@ -60,6 +60,8 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
     private OmiJoinView mOmiJoinView = null;
     private OmiHostView mOmiHostView = null;
 
+    private boolean preventGoBack = true;
+
     /*
 	 * Bluetooth broadcast receiver
 	 */
@@ -208,7 +210,39 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        if (preventGoBack) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Are you sure you want to go back?");
+            builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    mAlertDialog.dismiss();
+                }
+            });
+            builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    mAlertDialog.dismiss();
+                    preventGoBack = false;
+                    onBackPressed();
+                }
+            });
+            mAlertDialog = builder.create();
+            mAlertDialog.setCanceledOnTouchOutside(false);
+            mAlertDialog.setCancelable(false);
+            mAlertDialog.show();
+        }else {
+            super.onBackPressed();
+        }
+    }
+
     private void noBluetoothAndEndGame() {
+        finish();
+    }
+
+    public void endGame() {
         finish();
     }
 
@@ -410,7 +444,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
             mOmiHostView.addPartners(partners);
         }
 
-        if (connectedList.size() == 3) {
+        if (connectedList.size() == 2) {
             mOmiHostView.showPartnerSelection();
         }
     }
@@ -493,7 +527,59 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
     }
 
     private void connectedToHostedGame() {
-        //TODO
+        if (mOmiJoinView != null) {
+            mPopupLayout.removeView(mOmiJoinView);
+            mOmiJoinView = null;
+        }
+
+        mPopupLayout.setVisibility(View.GONE);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Successfully joined");
+        builder.setMessage("Please wait until others are joined.");
+        builder.setNegativeButton("Ok", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                mAlertDialog.dismiss();
+            }
+        });
+        mAlertDialog = builder.create();
+        mAlertDialog.setCanceledOnTouchOutside(false);
+        mAlertDialog.setCancelable(false);
+        mAlertDialog.show();
+    }
+
+    private void deviceNotConnectedToHost() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Sorry!");
+        builder.setMessage("Your device not connected to game. Please try again.");
+        builder.setNegativeButton("Ok", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                mAlertDialog.dismiss();
+            }
+        });
+        mAlertDialog = builder.create();
+        mAlertDialog.setCanceledOnTouchOutside(false);
+        mAlertDialog.setCancelable(false);
+        mAlertDialog.show();
+    }
+
+    private void joinedGameDisconnected() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Oops!");
+        builder.setMessage("Game connection lost.");
+        builder.setNegativeButton("Ok", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                mAlertDialog.dismiss();
+                endGame();
+            }
+        });
+        mAlertDialog = builder.create();
+        mAlertDialog.setCanceledOnTouchOutside(false);
+        mAlertDialog.setCancelable(false);
+        mAlertDialog.show();
     }
 
 
@@ -518,12 +604,30 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
 
     @Override
     public void connectionDisconnected(BluetoothDevice device) {
+        runOnUiThread(new Runnable() {
 
+            @Override
+            public void run() {
+                if (mIsHostGame) {
+                    updateConnectedPartners();
+                }else {
+                    joinedGameDisconnected();
+                }
+            }
+        });
     }
 
     @Override
     public void deviceNotConnected(BluetoothDevice device) {
+        runOnUiThread(new Runnable() {
 
+            @Override
+            public void run() {
+                if (!mIsHostGame) {
+                    deviceNotConnectedToHost();
+                }
+            }
+        });
     }
 
     @Override

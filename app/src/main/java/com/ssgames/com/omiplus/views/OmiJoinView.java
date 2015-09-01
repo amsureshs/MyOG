@@ -62,6 +62,8 @@ public class OmiJoinView extends LinearLayout {
             gameList = new ArrayList<>();
         }
 
+        gameList.clear();
+
         for (String gameName : gameNames) {
             if (!gameList.contains(gameName)) {
                 gameList.add(gameName);

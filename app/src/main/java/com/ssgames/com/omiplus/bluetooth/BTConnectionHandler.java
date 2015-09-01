@@ -16,7 +16,7 @@ public class BTConnectionHandler implements BTConnectThreadListener,
 	private static BTConnectionHandler btConnectionHandler = null;
 	public static final UUID MY_UUID = UUID.fromString("fa87c0d0-afac-11de-8a39-0800200c9a66"); //this value may read from app config
 
-	private int maxConnections = 3;
+	private int maxConnections = 2;
 	private int connectedCount = 0;
 	public boolean workAsHost = false;
 	private AcceptThread acceptThread = null;
@@ -163,7 +163,7 @@ public class BTConnectionHandler implements BTConnectThreadListener,
 		//Since a connection is established in BTConnection handler this device should have a BTConnection
 		BTConnection tmpConn = getConnectionOfDevice(device);
 		if (tmpConn == null) {
-			Log.d("D_TAG", "null connection");
+
 		}
 	}
 
@@ -350,7 +350,7 @@ public class BTConnectionHandler implements BTConnectThreadListener,
 				// MY_UUID is the app's UUID string, also used by the client
 				// code
 				tmp = BluetoothAdapter.getDefaultAdapter()
-						.listenUsingRfcommWithServiceRecord("BTT",
+						.listenUsingRfcommWithServiceRecord("OmiPlusBT",
 								BTConnectionHandler.MY_UUID);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -367,6 +367,7 @@ public class BTConnectionHandler implements BTConnectThreadListener,
 			while (true && connectedCount < maxConnections) {
 				try {
 					socket = btServerSocket.accept();
+					Log.d("D_TAG", "btSocket created......");
 				} catch (IOException e) {
 					e.printStackTrace();
 					break;
