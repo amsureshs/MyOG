@@ -23,6 +23,7 @@ import com.ssgames.com.omiplus.bluetooth.BTConnection;
 import com.ssgames.com.omiplus.bluetooth.BTConnectionHandler;
 import com.ssgames.com.omiplus.bluetooth.BTConnectionListener;
 import com.ssgames.com.omiplus.util.Constants;
+import com.ssgames.com.omiplus.util.OmiUtils;
 import com.ssgames.com.omiplus.util.SettingsManager;
 import com.ssgames.com.omiplus.views.OmiHostView;
 import com.ssgames.com.omiplus.views.OmiJoinView;
@@ -556,12 +557,21 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 mAlertDialog.dismiss();
+                showConnectingDialog();
             }
         });
         mAlertDialog = builder.create();
         mAlertDialog.setCanceledOnTouchOutside(false);
         mAlertDialog.setCancelable(false);
         mAlertDialog.show();
+    }
+
+    private void showConnectingDialog() {
+        OmiUtils.showProgressDialog(OmiGameActivity.this, "Others are connecting...");
+    }
+
+    private void dismissConnectingDialog() {
+        OmiUtils.dismissProgressDialog();
     }
 
     private void deviceNotConnectedToHost() {
