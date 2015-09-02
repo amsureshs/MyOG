@@ -22,9 +22,11 @@ import com.ssgames.com.omiplus.R;
 import com.ssgames.com.omiplus.bluetooth.BTConnection;
 import com.ssgames.com.omiplus.bluetooth.BTConnectionHandler;
 import com.ssgames.com.omiplus.bluetooth.BTConnectionListener;
+import com.ssgames.com.omiplus.bluetooth.BTDataPacket;
 import com.ssgames.com.omiplus.util.Constants;
 import com.ssgames.com.omiplus.util.OmiUtils;
 import com.ssgames.com.omiplus.util.SettingsManager;
+import com.ssgames.com.omiplus.views.OmiGameView;
 import com.ssgames.com.omiplus.views.OmiHostView;
 import com.ssgames.com.omiplus.views.OmiJoinView;
 
@@ -60,10 +62,14 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
 
     private OmiJoinView mOmiJoinView = null;
     private OmiHostView mOmiHostView = null;
+    private OmiGameView mOmiGameView = null;
 
     private boolean preventGoBack = true;
 
-    private BTConnection playerOneConnection = null;
+    private String partnerNickname = null;
+    private String partnerUniqueName = null;
+    private String player2UniqueName = null;
+    private String player4UniqueName = null;
 
     /*
 	 * Bluetooth broadcast receiver
@@ -112,6 +118,19 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
         mGameLayout = (LinearLayout)findViewById(R.id.gameLayout);
         mPopupLayout = (LinearLayout)findViewById(R.id.popupLayout);
         mPopupLayout.setVisibility(View.GONE);
+
+        mOmiGameView = new OmiGameView(OmiGameActivity.this, new OmiGameView.OmiGameViewListener() {
+            @Override
+            public void visibleButtonTapped() {
+
+            }
+
+            @Override
+            public void partnerSelected(String partnerName) {
+
+            }
+        });
+        mGameLayout.addView(mOmiGameView);
 
         Intent intent = getIntent();
         mIsHostGame = intent.getBooleanExtra(Constants.ExtraKey.EXTRA_KEY_HOST_OR_JOIN, false);
@@ -451,19 +470,103 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
             mOmiHostView.addPartners(partners);
         }
 
-        if (connectedList.size() == 3) {
+        Log.v(TAG, "Connected count: " + connectedList.size());
+
+        if (connectedList.size() >= 3) {
             mOmiHostView.showPartnerSelection();
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Select your partner");
+            builder.setMessage("Please select your partner.");
+            builder.setNegativeButton("Ok", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    mAlertDialog.dismiss();
+                }
+            });
+            mAlertDialog = builder.create();
+            mAlertDialog.setCanceledOnTouchOutside(false);
+            mAlertDialog.setCancelable(false);
+            mAlertDialog.show();
         }
     }
 
     private void partnerSelectedAndPartnersAreReady(String partnerName) {
         changeHostBluetoothNickName();
 
+        ArrayList<BTConnection> connectedList = mBtConnectionHandler.getConnectionList();
+        for (BTConnection btConnection : connectedList) {
+            BluetoothDevice device = btConnection.getBtDevice();
+            if (device.getName().equalsIgnoreCase(partnerName)) {
+                partnerUniqueName = device.getAddress();
+                partnerNickname = device.getName();
+            }
+        }
+
         if (mOmiHostView != null) {
             mPopupLayout.removeView(mOmiHostView);
             mOmiHostView = null;
         }
         mPopupLayout.setVisibility(View.GONE);
+
+        sendPlayerNames();
+    }
+
+    private void sendPlayerNames() {
+        String player1 = SettingsManager.getSetting(Constants.UserKey.NICK_NAME, "", getApplicationContext());
+        String player3 = partnerNickname;
+        String player2 = "";
+        String player4 = "";
+
+        ArrayList<BTConnection> connectedList = mBtConnectionHandler.getConnectionList();
+        for (BTConnection btConnection : connectedList) {
+            BluetoothDevice device = btConnection.getBtDevice();
+            if (!device.getName().equalsIgnoreCase(partnerNickname)) {
+                if (player2.equalsIgnoreCase("")) {
+                    player2 = device.getName();
+                    player2UniqueName = device.getAddress();
+                }else {
+                    player4 = device.getName();
+                    player4UniqueName = device.getAddress();
+                }
+            }
+        }
+
+        BTDataPacket btDataPacket = new BTDataPacket();
+        btDataPacket.setOpCode(Constants.OpCodes.OPCODE_SET_PLAYER_NAMES);
+
+        StringBuilder stringBuilder = new StringBuilder("{");
+        stringBuilder.append("\"" + Constants.MultiPlayerKey.PLAYER_NAME_1_KEY + "\":\"" + player1 + "\",");
+        stringBuilder.append("\"" + Constants.MultiPlayerKey.PLAYER_NAME_2_KEY + "\":\"" + player2 + "\",");
+        stringBuilder.append("\"" + Constants.MultiPlayerKey.PLAYER_NAME_3_KEY + "\":\"" + player3 + "\",");
+        stringBuilder.append("\"" + Constants.MultiPlayerKey.PLAYER_NAME_4_KEY + "\":\"" + player4 + "\"}");
+
+        btDataPacket.setBody(stringBuilder.toString());
+        sendCommandToAllConnections(btDataPacket);
+    }
+
+    private void sendStartCommand() {
+        BTDataPacket btDataPacket = new BTDataPacket();
+        btDataPacket.setOpCode(Constants.OpCodes.OPCODE_START_GAME);
+        sendCommandToAllConnections(btDataPacket);
+
+        startHostedGame();
+    }
+
+    private void startHostedGame() {
+
+    }
+
+    private void handleReceivedData(BTConnection btConnection,  byte[] buffer) {
+
+    }
+
+    //host data handling
+    private void sendCommandToAllConnections(BTDataPacket btDataPacket) {
+        ArrayList<BTConnection> connectedList = mBtConnectionHandler.getConnectionList();
+        for (BTConnection btConnection : connectedList) {
+            btConnection.getBtConnectedThread().write(btDataPacket.getBuffer());
+        }
     }
 
     /*
@@ -607,6 +710,35 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
         mAlertDialog.show();
     }
 
+    private void startJoinedGame() {
+
+    }
+
+    private void handleReceivedData(byte[] buffer) {
+        BTDataPacket btDataPacket = new BTDataPacket(buffer);
+        switch (btDataPacket.getOpCode()) {
+            case Constants.OpCodes.OPCODE_NONE :
+            {
+
+            }
+            break;
+            case Constants.OpCodes.OPCODE_SET_PLAYER_NAMES :
+            {
+                if (mOmiGameView != null) {
+                    mOmiGameView.setPlayerNames(btDataPacket.getJsonObject().optJSONObject(BTDataPacket.BODY));
+                }
+            }
+            break;
+            case Constants.OpCodes.OPCODE_START_GAME :
+            {
+                startJoinedGame();
+            }
+            break;
+            default:
+                break;
+        }
+    }
+
 
     /*
 	 * BTConnectionListener methods
@@ -656,17 +788,47 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
     }
 
     @Override
-    public void dataReceived(BTConnection connection, byte[] buffer) {
-
+    public void dataReceived(final BTConnection connection, final byte[] buffer) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (mIsHostGame) {
+                    handleReceivedData(connection, buffer);
+                }else {
+                    //handle incoming data (commands)
+                    handleReceivedData(buffer);
+                }
+            }
+        });
     }
 
     @Override
     public void dataDidSend(BTConnection connection) {
 
+        final BTConnection conn = connection;
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "Data did send");
+                if(conn != null){
+                    Log.v(TAG, "Data did send to: " + conn.getBtDevice().getName());
+                }
+            }
+        });
     }
 
     @Override
     public void dataDidNotSend(BTConnection connection, byte[] buffer) {
-
+        final BTConnection conn = connection;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "Data did not send");
+                if(conn != null){
+                    Log.v(TAG, "Data did not send to: " + conn.getBtDevice().getName());
+                }
+            }
+        });
     }
 }

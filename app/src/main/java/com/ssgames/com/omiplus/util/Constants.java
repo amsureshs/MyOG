@@ -2,20 +2,29 @@ package com.ssgames.com.omiplus.util;
 
 public class Constants {
 
-	public interface UserKey {
+	public class UserKey {
 		public static final String NICK_NAME = "nick_name";
 		public static final String ORI_BT_NAME = "old_bt_name";
 		public static final String NEW_BT_NAME = "new_bt_name";
 	}
 	
-	public interface MultiPlayerKey {
-		public static final String PLAYER_1_NAME = "player_1_name";
-		public static final String PLAYER_2_NAME = "player_2_name";
+	public class MultiPlayerKey {
+		public static final String PLAYER_NAME_1_KEY = "player_name_a_1_key";
+		public static final String PLAYER_NAME_2_KEY = "player_name_a_2_key";
+        public static final String PLAYER_NAME_3_KEY = "player_name_b_1_key";
+        public static final String PLAYER_NAME_4_KEY = "player_name_b_2_key";
 	}
 	
-	public interface ExtraKey {
+	public class ExtraKey {
 		public static final String EXTRA_KEY_GAME_TYPE = "extra_key_game_type";
 		public static final String EXTRA_KEY_HOST_OR_JOIN = "host_or_join_extra";
 	}
+
+    public class OpCodes {
+        public static final int OPCODE_NONE = 0;
+        public static final int OPCODE_START_GAME = 1;
+        public static final int OPCODE_GAME_END = 2;
+        public static final int OPCODE_SET_PLAYER_NAMES = 3;
+    }
 	
 }

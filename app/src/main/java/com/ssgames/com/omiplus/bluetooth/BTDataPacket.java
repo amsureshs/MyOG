@@ -1,59 +1,117 @@
 package com.ssgames.com.omiplus.bluetooth;
 
+import android.util.Log;
+
+import org.json.JSONObject;
+
 public class BTDataPacket {
 
-	private String header;
-	private String opCode;
+    private static final String TAG = BTDataPacket.class.getSimpleName();
+
+	public static final String OP_CODE = "op_code";
+    public static final String BODY = "body";
+
+	private int opCode;
 	private String body;
+	private JSONObject jsonObject;
 
 	public BTDataPacket() {
-		header = "HEADER";
+
+	}
+
+	public BTDataPacket(String jsonString) {
+		JSONObject jsonObject = null;
+		try {
+			jsonObject = new JSONObject(jsonString);
+		}catch (Exception e) {}
+
+		if (jsonObject != null) {
+			this.jsonObject = jsonObject;
+			int opCode = jsonObject.optInt(OP_CODE, 0);
+			this.opCode = opCode;
+
+            JSONObject bodyObj = jsonObject.optJSONObject(BODY);
+            if (bodyObj == null) {
+                String body = jsonObject.optString(BODY, "");
+                this.body = body;
+            }else {
+                this.body = bodyObj.toString();
+            }
+		}
+	}
+
+	public BTDataPacket(JSONObject jsonObject) {
+		if (jsonObject != null) {
+			this.jsonObject = jsonObject;
+			int opCode = jsonObject.optInt(OP_CODE, 0);
+			this.opCode = opCode;
+            JSONObject bodyObj = jsonObject.optJSONObject(BODY);
+            if (bodyObj == null) {
+                String body = jsonObject.optString(BODY, "");
+                this.body = body;
+            }else {
+                this.body = bodyObj.toString();
+            }
+		}
 	}
 
 	public BTDataPacket(byte[] buffer) {
-		setDataParts(buffer);
-	}
-
-	private void setDataParts(byte[] buffer) {
-
+		String jsonString = null;
 		try {
-			String s = new String(buffer, "UTF-8");
-			String[] sComps = s.split("#");
-			if (sComps.length == 3) {
-				header = sComps[0];
-				opCode = sComps[1];
-				body = sComps[2];
-			}
+			jsonString = new String(buffer, "UTF-8");
 		} catch (Exception e) {
 
+		}
+
+		if (jsonString != null) {
+			JSONObject jsonObject = null;
+			try {
+				jsonObject = new JSONObject(jsonString);
+			}catch (Exception e) {}
+
+			if (jsonObject != null) {
+				this.jsonObject = jsonObject;
+				int opCode = jsonObject.optInt(OP_CODE, 0);
+				this.opCode = opCode;
+				String body = jsonObject.optString(BODY, "");
+				this.body = body;
+			}
 		}
 	}
 	
 	public byte[] getBuffer() {
-		
-		String s = header + "#" + opCode + "#" + body;
+
+		StringBuilder stringBuilder = new StringBuilder("{");
+		stringBuilder.append("\"" + OP_CODE + "\":" + opCode + ",");
+
+        JSONObject testJson = null;
+
+        try {
+            testJson = new JSONObject(body);
+        }catch (Exception e){}
+
+        if (testJson == null) {
+            stringBuilder.append("\"" + BODY + "\": \"" + body + "\"}");
+        }else {
+            stringBuilder.append("\"" + BODY + "\":" + body + "}");
+        }
+
+		String jsonString = stringBuilder.toString();
+
+        Log.v(TAG, "jsonString: " + jsonString);
+
 		byte[] buffer = null;
 		try {
-			buffer = s.getBytes("UTF-8");
-		} catch (Exception e) {
-			
-		}
+			buffer = jsonString.getBytes("UTF-8");
+		} catch (Exception e) {}
 		return buffer;
 	}
 
-	public String getHeader() {
-		return header;
-	}
-
-	public void setHeader(String header) {
-		this.header = header;
-	}
-
-	public String getOpCode() {
+	public int getOpCode() {
 		return opCode;
 	}
 
-	public void setOpCode(String opCode) {
+	public void setOpCode(int opCode) {
 		this.opCode = opCode;
 	}
 
@@ -63,5 +121,9 @@ public class BTDataPacket {
 
 	public void setBody(String body) {
 		this.body = body;
+	}
+
+	public JSONObject getJsonObject() {
+		return jsonObject;
 	}
 }

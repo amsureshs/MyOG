@@ -15,6 +15,11 @@
     <string name="host_joined_list">Joining</string>
     <string name="host_select_partner">Select your partner</string>
     <string name="host_btn_go_visible">Go Visible</string>
-    <string name="host_btn_visible">Visible&#8230;</string>
+    <string name="host_btn_visible">Visible</string>
+
+    <string name="game_player_name_1">Player1</string>
+    <string name="game_player_name_2">Player2</string>
+    <string name="game_player_name_3">Player3</string>
+    <string name="game_player_name_4">Player4</string>
 
 </resources>
