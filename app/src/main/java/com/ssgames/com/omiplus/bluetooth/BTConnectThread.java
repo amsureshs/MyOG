@@ -7,6 +7,8 @@ import android.util.Log;
 
 public class BTConnectThread extends Thread {
 
+    private static final String TAG = BTConnectThread.class.getSimpleName();
+
 	private final BluetoothDevice btDevice;
 	private final BluetoothSocket btSocket;
 	private final BTConnectThreadListener ctListener;
@@ -21,7 +23,7 @@ public class BTConnectThread extends Thread {
 			tmp = btDevice
 					.createRfcommSocketToServiceRecord(BTConnectionHandler.MY_UUID);
 		} catch (Exception e) {
-			Log.d("D_TAG", "Creating socket failed!");
+			Log.d(TAG, "Creating socket failed!");
 			e.printStackTrace();
 		}
 
@@ -33,10 +35,10 @@ public class BTConnectThread extends Thread {
 
 		try {
 			btSocket.connect();
-			Log.d("D_TAG", "Connected to host");
+			Log.d(TAG, "Connected to host");
 		} catch (Exception e) {
 
-			Log.d("D_TAG", "Connecting failed to host");
+			Log.d(TAG, "Connecting failed to host");
 			e.printStackTrace();
 
 			try {

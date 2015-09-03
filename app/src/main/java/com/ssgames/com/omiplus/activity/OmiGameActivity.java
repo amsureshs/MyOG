@@ -55,6 +55,9 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
 
     //Join
     private ArrayList<BluetoothDevice> discoveredList = null;
+    private boolean isJoinedToGame = false;
+
+    private boolean isGameStarted = false;
 
     //UIs
     private LinearLayout mGameLayout = null;
@@ -509,6 +512,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
         }
         mPopupLayout.setVisibility(View.GONE);
 
+        mBtConnectionHandler.stopListenIncomingConnections();
         sendPlayerNames();
     }
 
@@ -542,12 +546,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
         stringBuilder.append("\"" + Constants.MultiPlayerKey.PLAYER_NAME_4_KEY + "\":\"" + player4 + "\"}");
 
         btDataPacket.setBody(stringBuilder.toString());
-        //sendCommandToAllConnections(btDataPacket);
-
-        BTDataPacket btDataPacket1 = new BTDataPacket();
-        btDataPacket1.setOpCode(Constants.OpCodes.OPCODE_START_GAME);
-        btDataPacket1.setBody("Test");
-        sendCommandToAllConnections(btDataPacket1);
+        sendCommandToAllConnections(btDataPacket);
     }
 
     private void sendStartCommand() {
@@ -559,24 +558,27 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
     }
 
     private void startHostedGame() {
-
+        isGameStarted = true;
     }
 
     private void handleReceivedData(BTConnection btConnection,  byte[] buffer) {
 
     }
 
+    private void testWriteToAll() {
+        BTDataPacket btDataPacket = new BTDataPacket();
+        btDataPacket.setOpCode(Constants.OpCodes.OPCODE_NONE);
+        btDataPacket.setBody("Test");
+        sendCommandToAllConnections(btDataPacket);
+    }
+
     //host data handling
     private void sendCommandToAllConnections(BTDataPacket btDataPacket) {
         ArrayList<BTConnection> connectedList = mBtConnectionHandler.getConnectionList();
 
-        BTConnection btConnection = connectedList.get(2);
-        btConnection.getBtConnectedThread().write(btDataPacket.getBuffer());
-
-        /*
         for (BTConnection btConnection : connectedList) {
             btConnection.getBtConnectedThread().write(btDataPacket.getBuffer());
-        }*/
+        }
     }
 
     /*
@@ -716,7 +718,10 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 mAlertDialog.dismiss();
-                endGame();
+                if (isGameStarted) {
+                    isGameStarted = false;
+                    endGame();
+                }
             }
         });
         mAlertDialog = builder.create();
@@ -726,7 +731,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
     }
 
     private void startJoinedGame() {
-
+        isGameStarted = true;
     }
 
     private void handleReceivedData(byte[] buffer) {
@@ -768,6 +773,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
                 if (mIsHostGame) {
                     updateConnectedPartners();
                 }else {
+                    isJoinedToGame = true;
                     connectedToHostedGame();
                 }
             }
@@ -783,7 +789,10 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
                 if (mIsHostGame) {
                     updateConnectedPartners();
                 }else {
-                    joinedGameDisconnected();
+                    if (isJoinedToGame) {
+                        isJoinedToGame = false;
+                        joinedGameDisconnected();
+                    }
                 }
             }
         });

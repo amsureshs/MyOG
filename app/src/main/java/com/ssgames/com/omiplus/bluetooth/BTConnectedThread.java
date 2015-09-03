@@ -9,6 +9,8 @@ import android.util.Log;
 
 public class BTConnectedThread extends Thread {
 
+    private static final String TAG = BTConnectedThread.class.getSimpleName();
+
 	private final BluetoothSocket btSocket;
 	private final InputStream socInStream;
 	private final OutputStream socOutStream;
@@ -25,7 +27,8 @@ public class BTConnectedThread extends Thread {
 			tmpIn = btSocket.getInputStream();
 			tmpOut = btSocket.getOutputStream();
 		} catch (Exception e) {
-
+            e.printStackTrace();
+            Log.v(TAG, "Error during get input and out streams");
 		}
 
 		socInStream = tmpIn;
@@ -45,8 +48,9 @@ public class BTConnectedThread extends Thread {
 					ctListener.btConnectedNewDataReceived(btSocket, buffer);
 				}
 			} catch (IOException e) {
+                Log.v(TAG, "Error during reading data");
+                e.printStackTrace();
 				ctListener.btConnectedNewDataReadFailed(btSocket);
-				// TODO on break
 				break;
 			}
 		}
@@ -57,8 +61,9 @@ public class BTConnectedThread extends Thread {
 			socOutStream.write(buffer);
 			ctListener.btConnectedDataWriteSucceeded(btSocket);
 		} catch (IOException e) {
+            e.printStackTrace();
+            Log.v(TAG, "Error during writing data");
 			ctListener.btConnectedDataWriteFailed(btSocket, buffer);
-			Log.d("D_TAG", "Error during write");
 		}
 	}
 
@@ -66,7 +71,7 @@ public class BTConnectedThread extends Thread {
 		try {
 			btSocket.close();
 		} catch (IOException e) {
-			Log.d("D_TAG", "Socket closing error");
+			Log.v(TAG, "Socket closing error");
 		}
 	}
 

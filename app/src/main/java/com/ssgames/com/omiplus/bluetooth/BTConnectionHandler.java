@@ -20,6 +20,7 @@ public class BTConnectionHandler implements BTConnectThreadListener,
 	private int connectedCount = 0;
 	public boolean workAsHost = false;
 	private AcceptThread acceptThread = null;
+    private  boolean acceptAborted = false;
 
 	private ArrayList<BTConnection> connectionList = null;
 	private ArrayList<BTConnectionListener> connectionsListeners = null;
@@ -187,6 +188,7 @@ public class BTConnectionHandler implements BTConnectThreadListener,
 		}
 
 		if (acceptThread != null) {
+            acceptAborted = false;
 			acceptThread.cancel();
 			acceptThread = null;
 		}
@@ -198,6 +200,7 @@ public class BTConnectionHandler implements BTConnectThreadListener,
 	//Stop listening incoming connections
 	public void stopListenIncomingConnections() {
 		if (acceptThread != null && acceptThread.isAlive()) {
+            acceptAborted = false;
 			acceptThread.cancel();
 		}
 	}
@@ -363,15 +366,17 @@ public class BTConnectionHandler implements BTConnectThreadListener,
 
 		public void run() {
 			// Keep listening until exception occurs or a socket is returned
+            BluetoothSocket socket;
 			while (true && connectedCount < maxConnections) {
-
-                BluetoothSocket socket = null;
 
 				try {
 					socket = btServerSocket.accept();
 					Log.d("D_TAG", "BTSocket created in accept thread......");
 				} catch (IOException e) {
+                    Log.d("D_TAG", "BTSocket not created and end with exception......");
 					e.printStackTrace();
+                    acceptAborted = true;
+                    cancel();
 					break;
 				}
 				// If a connection was accepted
@@ -400,8 +405,13 @@ public class BTConnectionHandler implements BTConnectThreadListener,
 			try {
 				btServerSocket.close();
 			} catch (IOException e) {
-			}
-		}
+			}finally {
+                if (acceptAborted) {
+                    acceptAborted = false;
+                    startListenIncomingConnections();
+                }
+            }
+        }
 	}
 
 	/*
