@@ -362,12 +362,14 @@ public class BTConnectionHandler implements BTConnectThreadListener,
 		}
 
 		public void run() {
-			BluetoothSocket socket = null;
 			// Keep listening until exception occurs or a socket is returned
 			while (true && connectedCount < maxConnections) {
+
+                BluetoothSocket socket = null;
+
 				try {
 					socket = btServerSocket.accept();
-					Log.d("D_TAG", "btSocket created......");
+					Log.d("D_TAG", "BTSocket created in accept thread......");
 				} catch (IOException e) {
 					e.printStackTrace();
 					break;
@@ -375,7 +377,6 @@ public class BTConnectionHandler implements BTConnectThreadListener,
 				// If a connection was accepted
 				if (socket != null) {
 					// Do work to manage the connection (in a separate thread)
-
 					newConnectionEstablished(socket);
 
 					try {

@@ -542,7 +542,12 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
         stringBuilder.append("\"" + Constants.MultiPlayerKey.PLAYER_NAME_4_KEY + "\":\"" + player4 + "\"}");
 
         btDataPacket.setBody(stringBuilder.toString());
-        sendCommandToAllConnections(btDataPacket);
+        //sendCommandToAllConnections(btDataPacket);
+
+        BTDataPacket btDataPacket1 = new BTDataPacket();
+        btDataPacket1.setOpCode(Constants.OpCodes.OPCODE_START_GAME);
+        btDataPacket1.setBody("Test");
+        sendCommandToAllConnections(btDataPacket1);
     }
 
     private void sendStartCommand() {
@@ -564,9 +569,14 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
     //host data handling
     private void sendCommandToAllConnections(BTDataPacket btDataPacket) {
         ArrayList<BTConnection> connectedList = mBtConnectionHandler.getConnectionList();
+
+        BTConnection btConnection = connectedList.get(2);
+        btConnection.getBtConnectedThread().write(btDataPacket.getBuffer());
+
+        /*
         for (BTConnection btConnection : connectedList) {
             btConnection.getBtConnectedThread().write(btDataPacket.getBuffer());
-        }
+        }*/
     }
 
     /*
@@ -633,6 +643,9 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
     }
 
     private void connectPlayerToHost(String hostName) {
+
+        Log.v(TAG, "connectPlayerToHost: " + hostName);
+
         BluetoothDevice gameDevice = null;
         for (BluetoothDevice device : discoveredList) {
             if(device.getName().equalsIgnoreCase(hostName)) {
@@ -643,6 +656,8 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
 
         if (gameDevice != null) {
             mBtConnectionHandler.connectDevice(gameDevice);
+        }else {
+            Log.v(TAG, "connectPlayerToHost: " + "host not found");
         }
     }
 
@@ -792,6 +807,9 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+
+                Log.v(TAG, "dataReceived...................");
+
                 if (mIsHostGame) {
                     handleReceivedData(connection, buffer);
                 }else {

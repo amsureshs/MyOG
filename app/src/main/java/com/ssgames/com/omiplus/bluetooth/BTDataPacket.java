@@ -63,6 +63,8 @@ public class BTDataPacket {
 
 		}
 
+		Log.v(TAG, "Received data: " + jsonString);
+
 		if (jsonString != null) {
 			JSONObject jsonObject = null;
 			try {
@@ -75,6 +77,8 @@ public class BTDataPacket {
 				this.opCode = opCode;
 				String body = jsonObject.optString(BODY, "");
 				this.body = body;
+			}else {
+				Log.v(TAG, "Received data: " + "Json object is null");
 			}
 		}
 	}
@@ -84,16 +88,20 @@ public class BTDataPacket {
 		StringBuilder stringBuilder = new StringBuilder("{");
 		stringBuilder.append("\"" + OP_CODE + "\":" + opCode + ",");
 
-        JSONObject testJson = null;
+        if (body != null) {
+            JSONObject testJson = null;
 
-        try {
-            testJson = new JSONObject(body);
-        }catch (Exception e){}
+            try {
+                testJson = new JSONObject(body);
+            }catch (Exception e){}
 
-        if (testJson == null) {
-            stringBuilder.append("\"" + BODY + "\": \"" + body + "\"}");
+            if (testJson == null) {
+                stringBuilder.append("\"" + BODY + "\": \"" + body + "\"}");
+            }else {
+                stringBuilder.append("\"" + BODY + "\":" + body + "}");
+            }
         }else {
-            stringBuilder.append("\"" + BODY + "\":" + body + "}");
+            stringBuilder.append("\"" + BODY + "\": \"\"}");
         }
 
 		String jsonString = stringBuilder.toString();

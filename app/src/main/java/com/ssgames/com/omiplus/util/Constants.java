@@ -9,10 +9,10 @@ public class Constants {
 	}
 	
 	public class MultiPlayerKey {
-		public static final String PLAYER_NAME_1_KEY = "player_name_a_1_key";
-		public static final String PLAYER_NAME_2_KEY = "player_name_a_2_key";
-        public static final String PLAYER_NAME_3_KEY = "player_name_b_1_key";
-        public static final String PLAYER_NAME_4_KEY = "player_name_b_2_key";
+		public static final String PLAYER_NAME_1_KEY = "pn1_k";
+		public static final String PLAYER_NAME_2_KEY = "pn2_k";
+        public static final String PLAYER_NAME_3_KEY = "pn3_k";
+        public static final String PLAYER_NAME_4_KEY = "pn4_k";
 	}
 	
 	public class ExtraKey {

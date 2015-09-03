@@ -33,9 +33,10 @@ public class BTConnectThread extends Thread {
 
 		try {
 			btSocket.connect();
+			Log.d("D_TAG", "Connected to host");
 		} catch (Exception e) {
 
-			Log.d("D_TAG", "Connecting failed!");
+			Log.d("D_TAG", "Connecting failed to host");
 			e.printStackTrace();
 
 			try {

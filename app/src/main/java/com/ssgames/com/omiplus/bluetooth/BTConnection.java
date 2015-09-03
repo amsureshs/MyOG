@@ -8,7 +8,6 @@ public class BTConnection {
 	private BluetoothSocket btSocket;
 	private BTConnectedThread btConnectedThread;
 	private BTConnectThread btConnectThread;
-	private boolean connect;
 
 	public BluetoothSocket getBtSocket() {
 		return btSocket;
@@ -32,10 +31,6 @@ public class BTConnection {
 
 	public void setBtConnectThread(BTConnectThread btConnectThread) {
 		this.btConnectThread = btConnectThread;
-	}
-
-	public boolean isConnect() {
-		return connect;
 	}
 
 	public BluetoothDevice getBtDevice() {
