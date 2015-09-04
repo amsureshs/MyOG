@@ -2,6 +2,7 @@ package com.ssgames.com.omiplus.views;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -28,7 +29,7 @@ public class OmiGameView extends LinearLayout {
     private TextView playerName3 = null;
     private TextView playerName4 = null;
 
-    private String myName = null;
+    public String myName = null;
     private int myPlace = 0;
 
     public OmiGameView(Context context, OmiGameViewListener omiGameViewListener) {
@@ -46,8 +47,12 @@ public class OmiGameView extends LinearLayout {
 
     public void setPlayerNames(JSONObject playerNames) {
         if (playerNames == null) {
+            Log.v(TAG, "Null player names");
             return;
         }
+
+        Log.v(TAG, "My Name: " + myName);
+        Log.v(TAG, "Player names: " + playerNames.toString());
 
         String player1 = playerNames.optString(Constants.MultiPlayerKey.PLAYER_NAME_1_KEY, "");
         String player2 = playerNames.optString(Constants.MultiPlayerKey.PLAYER_NAME_2_KEY, "");

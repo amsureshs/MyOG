@@ -13,14 +13,17 @@ import android.util.Log;
 public class BTConnectionHandler implements BTConnectThreadListener,
 		BTConnectedThreadListener {
 
+	private static final String TAG = BTConnectionHandler.class.getSimpleName();
+
 	private static BTConnectionHandler btConnectionHandler = null;
 	public static final UUID MY_UUID = UUID.fromString("fa87c0d0-afac-11de-8a39-0800200c9a66"); //this value may read from app config
 
-	private int maxConnections = 2;
+	private int maxConnections = 3;//this is for Omi game
 	private int connectedCount = 0;
 	public boolean workAsHost = false;
 	private AcceptThread acceptThread = null;
     private  boolean acceptAborted = false;
+    public boolean endWorkingAsHost = false;
 
 	private ArrayList<BTConnection> connectionList = null;
 	private ArrayList<BTConnectionListener> connectionsListeners = null;
@@ -183,9 +186,12 @@ public class BTConnectionHandler implements BTConnectThreadListener,
 
 	//This starts listening incoming connections when the device work as a BT host device
 	public void startListenIncomingConnections() {
+        Log.v(TAG, "startListenIncomingConnections");
 		if (acceptThread != null && acceptThread.isAlive()) {
 			return;
 		}
+
+        Log.v(TAG, "startListenIncomingConnections acceptThread will create");
 
 		if (acceptThread != null) {
             acceptAborted = false;
@@ -255,7 +261,7 @@ public class BTConnectionHandler implements BTConnectThreadListener,
 			connectedCount = 0;
 		}
 
-		if (workAsHost && (connectedCount < maxConnections)) {
+		if (!endWorkingAsHost && workAsHost && (connectedCount < maxConnections)) {
 			startListenIncomingConnections();
 		}
 	}
@@ -360,7 +366,7 @@ public class BTConnectionHandler implements BTConnectThreadListener,
 			}
 			btServerSocket = tmp;
 			if (btServerSocket != null) {
-				Log.d("D_TAG", "btServerSocket created");
+				Log.d(TAG, "btServerSocket created");
 			}
 		}
 
@@ -371,9 +377,9 @@ public class BTConnectionHandler implements BTConnectThreadListener,
 
 				try {
 					socket = btServerSocket.accept();
-					Log.d("D_TAG", "BTSocket created in accept thread......");
+					Log.d(TAG, "BTSocket created in accept thread......");
 				} catch (IOException e) {
-                    Log.d("D_TAG", "BTSocket not created and end with exception......");
+                    Log.d(TAG, "BTSocket not created and end with exception......");
 					e.printStackTrace();
                     acceptAborted = true;
                     cancel();
@@ -387,15 +393,16 @@ public class BTConnectionHandler implements BTConnectThreadListener,
 					try {
 						if (connectedCount >= maxConnections) {
 							btServerSocket.close();
+                            Log.d(TAG, "BTServerSocket closed in accept thread......");
 							break;
 						}
 					} catch (IOException e) {
+                        Log.d(TAG, "BTServerSocket closed in accept thread with exception......");
 					}
 
 					if (connectedCount >= maxConnections) {
 						break;
 					}
-
 				}
 			}
 		}
@@ -404,7 +411,9 @@ public class BTConnectionHandler implements BTConnectThreadListener,
 		public void cancel() {
 			try {
 				btServerSocket.close();
+                Log.d(TAG, "BTServerSocket closed in accept thread in cancel ......");
 			} catch (IOException e) {
+                Log.d(TAG, "BTServerSocket closed in accept thread with exception in cancel......");
 			}finally {
                 if (acceptAborted) {
                     acceptAborted = false;

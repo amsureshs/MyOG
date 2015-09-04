@@ -42,11 +42,16 @@ public class BTConnectedThread extends Thread {
 		// Keep listening to the InputStream while connected
 		while (true) {
 			try {
-				// Read from the InputStream
 				bytes = socInStream.read(buffer);
-				if (bytes == -1) {
-					ctListener.btConnectedNewDataReceived(btSocket, buffer);
-				}
+                if (bytes > 0) {
+                    byte[] buffer2 = new byte[bytes];
+                    for (int i = 0; i < bytes; i++) {
+                        buffer2[i] = buffer[i];
+                    }
+                    ctListener.btConnectedNewDataReceived(btSocket, buffer2);
+                }else if (bytes == -1) {
+                    ctListener.btConnectedNewDataReceived(btSocket, buffer);
+                }
 			} catch (IOException e) {
                 Log.v(TAG, "Error during reading data");
                 e.printStackTrace();
@@ -59,6 +64,7 @@ public class BTConnectedThread extends Thread {
 	public void write(byte[] buffer) {
 		try {
 			socOutStream.write(buffer);
+            socOutStream.flush();
 			ctListener.btConnectedDataWriteSucceeded(btSocket);
 		} catch (IOException e) {
             e.printStackTrace();

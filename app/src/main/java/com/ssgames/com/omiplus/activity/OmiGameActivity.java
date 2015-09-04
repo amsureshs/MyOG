@@ -17,6 +17,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.ssgames.com.omiplus.R;
 import com.ssgames.com.omiplus.bluetooth.BTConnection;
@@ -30,6 +31,8 @@ import com.ssgames.com.omiplus.views.OmiGameView;
 import com.ssgames.com.omiplus.views.OmiHostView;
 import com.ssgames.com.omiplus.views.OmiJoinView;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 
 public class OmiGameActivity extends Activity implements BTConnectionListener {
@@ -38,6 +41,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
 
     private static final int REQUEST_ENABLE_BT = 1;
     private static final int REQUEST_ENABLE_BT_DISCOVERY = 2;
+    private static final int maxConnCount = 3;
 
     private boolean bluetoothIsUsing = false;
 
@@ -233,6 +237,9 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
 
     @Override
     public void onBackPressed() {
+
+        Log.v(TAG, "onBackPressed..............");
+
         if (preventGoBack) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Are you sure you want to go back?");
@@ -247,6 +254,9 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
                 public void onClick(DialogInterface dialog, int which) {
                     mAlertDialog.dismiss();
                     preventGoBack = false;
+                    if (mIsHostGame) {
+                        mBtConnectionHandler.endWorkingAsHost = true;
+                    }
                     onBackPressed();
                 }
             });
@@ -291,6 +301,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
     private void startBluetoothServices() {
 
         mBtConnectionHandler = BTConnectionHandler.getSharedInstance();
+        mBtConnectionHandler.setMaxConnections(maxConnCount);
         mBtConnectionHandler.addConnectionListener(this);
 
 
@@ -425,7 +436,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
 
     private void changeHostBluetoothNickName() {
         String nickName = SettingsManager.getSetting(Constants.UserKey.NICK_NAME, "", getApplicationContext());
-
+        Log.v(TAG, "Changed to host bt to: " + nickName);
         mBTAdapter.setName(nickName);
 
         SettingsManager.addSetting(Constants.UserKey.NEW_BT_NAME, nickName, getApplicationContext());
@@ -433,6 +444,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
 
     private void resetHostBluetoothName() {
         String oldBtName = SettingsManager.getSetting(Constants.UserKey.ORI_BT_NAME, "", getApplicationContext());
+        Log.v(TAG, "rename hosted bt to: " + oldBtName);
         if (oldBtName.length() > 0) {
             mBTAdapter.setName(oldBtName);
         }
@@ -466,7 +478,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
             int i = 0;
             for (BTConnection btConnection : connectedList) {
                 BluetoothDevice device = btConnection.getBtDevice();
-                partners[i] = device.getName();
+                partners[i] = getJoinRemovedName(device.getName());
                 i++;
             }
 
@@ -475,7 +487,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
 
         Log.v(TAG, "Connected count: " + connectedList.size());
 
-        if (connectedList.size() >= 3) {
+        if (connectedList.size() >= maxConnCount) {
             mOmiHostView.showPartnerSelection();
 
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -494,13 +506,34 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
         }
     }
 
+    private void joinedConnectionDisconnected(BluetoothDevice device) {
+        updateConnectedPartners();
+        if (isGameStarted) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Oops!");
+            builder.setMessage("One partner's connection lost.");
+            builder.setNegativeButton("Ok", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    mAlertDialog.dismiss();
+                    isGameStarted = false;
+                    endGame();
+                }
+            });
+            mAlertDialog = builder.create();
+            mAlertDialog.setCanceledOnTouchOutside(false);
+            mAlertDialog.setCancelable(false);
+            mAlertDialog.show();
+        }
+    }
+
     private void partnerSelectedAndPartnersAreReady(String partnerName) {
         changeHostBluetoothNickName();
 
         ArrayList<BTConnection> connectedList = mBtConnectionHandler.getConnectionList();
         for (BTConnection btConnection : connectedList) {
             BluetoothDevice device = btConnection.getBtDevice();
-            if (device.getName().equalsIgnoreCase(partnerName)) {
+            if (device.getName().contains(partnerName)) {
                 partnerUniqueName = device.getAddress();
                 partnerNickname = device.getName();
             }
@@ -536,6 +569,10 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
             }
         }
 
+        player2 = getJoinRemovedName(player2);
+        player3 = getJoinRemovedName(player3);
+        player4 = getJoinRemovedName(player4);
+
         BTDataPacket btDataPacket = new BTDataPacket();
         btDataPacket.setOpCode(Constants.OpCodes.OPCODE_SET_PLAYER_NAMES);
 
@@ -545,8 +582,34 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
         stringBuilder.append("\"" + Constants.MultiPlayerKey.PLAYER_NAME_3_KEY + "\":\"" + player3 + "\",");
         stringBuilder.append("\"" + Constants.MultiPlayerKey.PLAYER_NAME_4_KEY + "\":\"" + player4 + "\"}");
 
-        btDataPacket.setBody(stringBuilder.toString());
+        String jsonBody = stringBuilder.toString();
+
+        btDataPacket.setBody(jsonBody);
         sendCommandToAllConnections(btDataPacket);
+
+        mOmiGameView.myName = player1;
+
+        JSONObject nameJson = null;
+        try {
+            nameJson = new JSONObject(jsonBody);
+        }catch (Exception e) {}
+
+        if (nameJson != null) {
+            mOmiGameView.setPlayerNames(nameJson);
+        }
+
+        sendStartCommand();
+    }
+
+    private String getJoinRemovedName(String name) {
+        if (name == null) {
+            return "";
+        }
+        String joinStr = "Join Omi - ";
+        if (name.contains(joinStr)) {
+            name = name.replace(joinStr,"");
+        }
+        return name;
     }
 
     private void sendStartCommand() {
@@ -595,6 +658,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
 
     private void resetJoinBluetoothName() {
         String oldBtName = SettingsManager.getSetting(Constants.UserKey.ORI_BT_NAME, "", getApplicationContext());
+        Log.v(TAG, "rename joined bt to: " + oldBtName);
         if (oldBtName.length() > 0) {
             mBTAdapter.setName(oldBtName);
         }
@@ -670,20 +734,14 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
         }
         mPopupLayout.setVisibility(View.GONE);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Successfully joined");
-        builder.setMessage("Please wait until others are joined.");
-        builder.setNegativeButton("Ok", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                mAlertDialog.dismiss();
-                showConnectingDialog();
-            }
-        });
-        mAlertDialog = builder.create();
-        mAlertDialog.setCanceledOnTouchOutside(false);
-        mAlertDialog.setCancelable(false);
-        mAlertDialog.show();
+        showConnectingDialog();
+
+        CharSequence text = "Join game succeeded!";
+        int duration = Toast.LENGTH_SHORT;
+        Toast toast = Toast.makeText(getApplicationContext(), text, duration);
+        toast.show();
+
+        mOmiGameView.myName = BluetoothAdapter.getDefaultAdapter().getName();
     }
 
     private void showConnectingDialog() {
@@ -718,8 +776,8 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 mAlertDialog.dismiss();
-                if (isGameStarted) {
-                    isGameStarted = false;
+                if (!isJoinedToGame) {
+                    dismissConnectingDialog();
                     endGame();
                 }
             }
@@ -731,7 +789,16 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
     }
 
     private void startJoinedGame() {
+        dismissConnectingDialog();
         isGameStarted = true;
+    }
+
+    private void writeDataToHost(BTDataPacket btDataPacket) {
+        ArrayList<BTConnection> connectedList = mBtConnectionHandler.getConnectionList();
+
+        for (BTConnection btConnection : connectedList) {
+            btConnection.getBtConnectedThread().write(btDataPacket.getBuffer());
+        }
     }
 
     private void handleReceivedData(byte[] buffer) {
@@ -782,12 +849,12 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
 
     @Override
     public void connectionDisconnected(BluetoothDevice device) {
+        final BluetoothDevice fDevice = device;
         runOnUiThread(new Runnable() {
-
             @Override
             public void run() {
                 if (mIsHostGame) {
-                    updateConnectedPartners();
+                    joinedConnectionDisconnected(fDevice);
                 }else {
                     if (isJoinedToGame) {
                         isJoinedToGame = false;

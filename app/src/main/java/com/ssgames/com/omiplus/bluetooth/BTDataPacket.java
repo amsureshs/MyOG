@@ -60,7 +60,7 @@ public class BTDataPacket {
 		try {
 			jsonString = new String(buffer, "UTF-8");
 		} catch (Exception e) {
-
+			Log.v(TAG, "Received data exception creating jsonString");
 		}
 
 		Log.v(TAG, "Received data: " + jsonString);
@@ -112,6 +112,7 @@ public class BTDataPacket {
 		try {
 			buffer = jsonString.getBytes("UTF-8");
 		} catch (Exception e) {}
+
 		return buffer;
 	}
 
