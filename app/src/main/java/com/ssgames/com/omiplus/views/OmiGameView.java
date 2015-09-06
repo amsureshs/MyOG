@@ -21,6 +21,8 @@ public class OmiGameView extends LinearLayout {
     private static final String TAG = OmiGameView.class.getSimpleName();
 
     public interface OmiGameViewListener {
+        public void playerIsShufflingPack(int playerNo);
+        public void playerIsSelectingTrumps(int playerNo);
         public void playerDidSelectTrumps(int playerNo, Constants.OmiSuit suit, boolean isFromNextHand);
         public void playerDidPlayACard(int playerNo, int cardNo, int option);
     }
