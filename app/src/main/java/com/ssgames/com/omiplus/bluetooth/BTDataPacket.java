@@ -128,6 +128,13 @@ public class BTDataPacket {
 		return body;
 	}
 
+    public JSONObject getBodyAsJson() {
+        if (jsonObject != null) {
+            return jsonObject.optJSONObject(BODY);
+        }
+        return null;
+    }
+
 	public void setBody(String body) {
 		this.body = body;
 	}

@@ -8,11 +8,17 @@ public class Constants {
 		public static final String NEW_BT_NAME = "new_bt_name";
 	}
 	
-	public class MultiPlayerKey {
+	public class OmiJsonKey {
 		public static final String PLAYER_NAME_1_KEY = "pn1_k";
 		public static final String PLAYER_NAME_2_KEY = "pn2_k";
         public static final String PLAYER_NAME_3_KEY = "pn3_k";
         public static final String PLAYER_NAME_4_KEY = "pn4_k";
+
+        public static final String PLAYER_NUMBER_KEY = "pn_k";
+        public static final String CARD_NUMBER_KEY = "cn_k";
+        public static final String PLAYED_OPTION_KEY = "po_k";
+        public static final String SELECTED_TRUMPS_KEY = "tr_k";
+        public static final String SELECTED_TRUMPS_OPTION_KEY = "to_k";
 	}
 	
 	public class ExtraKey {
@@ -25,6 +31,18 @@ public class Constants {
         public static final int OPCODE_START_GAME = 1;
         public static final int OPCODE_GAME_END = 2;
         public static final int OPCODE_SET_PLAYER_NAMES = 3;
+        public static final int OPCODE_PLAYER_SHUFFLING_PACK = 4;
+        public static final int OPCODE_CARDS_AVAILABLE = 5;
+        public static final int OPCODE_PLAYER_SELECTING_TRUMPS = 6;
+        public static final int OPCODE_PLAYER_SELECTED_TRUMPS = 7;
+        public static final int OPCODE_PLAYER_PLAYED_CARD = 8;
     }
-	
+
+    public enum OmiSuit {
+        SPADES,
+        HEARTS,
+        CLUBS,
+        DIAMONDS,
+        NONE
+    }
 }

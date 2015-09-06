@@ -24,8 +24,8 @@ import com.ssgames.com.omiplus.bluetooth.BTConnection;
 import com.ssgames.com.omiplus.bluetooth.BTConnectionHandler;
 import com.ssgames.com.omiplus.bluetooth.BTConnectionListener;
 import com.ssgames.com.omiplus.bluetooth.BTDataPacket;
+import com.ssgames.com.omiplus.model.OmiPlayer;
 import com.ssgames.com.omiplus.util.Constants;
-import com.ssgames.com.omiplus.util.OmiUtils;
 import com.ssgames.com.omiplus.util.SettingsManager;
 import com.ssgames.com.omiplus.views.OmiGameView;
 import com.ssgames.com.omiplus.views.OmiHostView;
@@ -35,7 +35,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class OmiGameActivity extends Activity implements BTConnectionListener {
+public class OmiGameActivity extends Activity implements BTConnectionListener , OmiGameView.OmiGameViewListener{
 
     private static final String TAG = OmiGameActivity.class.getSimpleName();
 
@@ -75,8 +75,8 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
 
     private String partnerNickname = null;
     private String partnerUniqueName = null;
-    private String player2UniqueName = null;
-    private String player4UniqueName = null;
+
+    private ArrayList<OmiPlayer> mPlayerArrayList = null;
 
     /*
 	 * Bluetooth broadcast receiver
@@ -126,17 +126,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
         mPopupLayout = (LinearLayout)findViewById(R.id.popupLayout);
         mPopupLayout.setVisibility(View.GONE);
 
-        mOmiGameView = new OmiGameView(OmiGameActivity.this, new OmiGameView.OmiGameViewListener() {
-            @Override
-            public void visibleButtonTapped() {
-
-            }
-
-            @Override
-            public void partnerSelected(String partnerName) {
-
-            }
-        });
+        mOmiGameView = new OmiGameView(OmiGameActivity.this, this);
         mGameLayout.addView(mOmiGameView);
 
         Intent intent = getIntent();
@@ -364,7 +354,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT);
-        nameET.setTextColor(getResources().getColor(R.color.black));
+        //nameET.setTextColor(getResources().getColor(R.color.black));
         nameET.setHint("Nickname");
         nameET.setLayoutParams(lp);
 
@@ -555,16 +545,47 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
         String player2 = "";
         String player4 = "";
 
+        if(mPlayerArrayList != null) {
+            mPlayerArrayList.clear();
+        }else {
+            mPlayerArrayList = new ArrayList<>();
+        }
+
+        OmiPlayer omiPlayer1 = new OmiPlayer();
+        OmiPlayer omiPlayer2 = new OmiPlayer();
+        OmiPlayer omiPlayer3 = new OmiPlayer();
+        OmiPlayer omiPlayer4 = new OmiPlayer();
+
+        mPlayerArrayList.add(omiPlayer1);
+        mPlayerArrayList.add(omiPlayer2);
+        mPlayerArrayList.add(omiPlayer3);
+        mPlayerArrayList.add(omiPlayer4);
+
+        omiPlayer1.setNickName(player1);
+        omiPlayer1.setPlayerNo(1);
+        omiPlayer1.setWonCount(0);
+        omiPlayer1.setUniqueName("");
+
+        omiPlayer2.setPlayerNo(2);
+        omiPlayer2.setWonCount(0);
+
+        omiPlayer3.setPlayerNo(3);
+        omiPlayer3.setWonCount(0);
+        omiPlayer3.setUniqueName(partnerUniqueName);
+
+        omiPlayer4.setPlayerNo(4);
+        omiPlayer4.setWonCount(0);
+
         ArrayList<BTConnection> connectedList = mBtConnectionHandler.getConnectionList();
         for (BTConnection btConnection : connectedList) {
             BluetoothDevice device = btConnection.getBtDevice();
             if (!device.getName().equalsIgnoreCase(partnerNickname)) {
                 if (player2.equalsIgnoreCase("")) {
                     player2 = device.getName();
-                    player2UniqueName = device.getAddress();
+                    omiPlayer2.setUniqueName(device.getAddress());
                 }else {
                     player4 = device.getName();
-                    player4UniqueName = device.getAddress();
+                    omiPlayer4.setUniqueName(device.getAddress());
                 }
             }
         }
@@ -573,14 +594,18 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
         player3 = getJoinRemovedName(player3);
         player4 = getJoinRemovedName(player4);
 
+        omiPlayer2.setNickName(player2);
+        omiPlayer3.setNickName(player3);
+        omiPlayer4.setNickName(player4);
+
         BTDataPacket btDataPacket = new BTDataPacket();
         btDataPacket.setOpCode(Constants.OpCodes.OPCODE_SET_PLAYER_NAMES);
 
         StringBuilder stringBuilder = new StringBuilder("{");
-        stringBuilder.append("\"" + Constants.MultiPlayerKey.PLAYER_NAME_1_KEY + "\":\"" + player1 + "\",");
-        stringBuilder.append("\"" + Constants.MultiPlayerKey.PLAYER_NAME_2_KEY + "\":\"" + player2 + "\",");
-        stringBuilder.append("\"" + Constants.MultiPlayerKey.PLAYER_NAME_3_KEY + "\":\"" + player3 + "\",");
-        stringBuilder.append("\"" + Constants.MultiPlayerKey.PLAYER_NAME_4_KEY + "\":\"" + player4 + "\"}");
+        stringBuilder.append("\"" + Constants.OmiJsonKey.PLAYER_NAME_1_KEY + "\":\"" + player1 + "\",");
+        stringBuilder.append("\"" + Constants.OmiJsonKey.PLAYER_NAME_2_KEY + "\":\"" + player2 + "\",");
+        stringBuilder.append("\"" + Constants.OmiJsonKey.PLAYER_NAME_3_KEY + "\":\"" + player3 + "\",");
+        stringBuilder.append("\"" + Constants.OmiJsonKey.PLAYER_NAME_4_KEY + "\":\"" + player4 + "\"}");
 
         String jsonBody = stringBuilder.toString();
 
@@ -624,10 +649,6 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
         isGameStarted = true;
     }
 
-    private void handleReceivedData(BTConnection btConnection,  byte[] buffer) {
-
-    }
-
     private void testWriteToAll() {
         BTDataPacket btDataPacket = new BTDataPacket();
         btDataPacket.setOpCode(Constants.OpCodes.OPCODE_NONE);
@@ -636,11 +657,69 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
     }
 
     //host data handling
+
+    private void handleReceivedData(BTConnection btConnection,  byte[] buffer) {
+
+        OmiPlayer omiPlayer = null;
+        BluetoothDevice device = btConnection.getBtDevice();
+
+        for (OmiPlayer player : mPlayerArrayList) {
+            if (device.getAddress().equalsIgnoreCase(player.getUniqueName())) {
+                omiPlayer = player;
+                break;
+            }
+        }
+
+
+        //TODO
+
+        BTDataPacket btDataPacket = new BTDataPacket(buffer);
+        switch (btDataPacket.getOpCode()) {
+            case Constants.OpCodes.OPCODE_NONE :
+            {
+
+            }
+            break;
+            case Constants.OpCodes.OPCODE_PLAYER_SELECTED_TRUMPS:
+            {
+
+            }
+            break;
+            case Constants.OpCodes.OPCODE_PLAYER_PLAYED_CARD:
+            {
+                playerPlayedCard(omiPlayer, btDataPacket);
+            }
+            break;
+            default:
+                break;
+        }
+    }
+
     private void sendCommandToAllConnections(BTDataPacket btDataPacket) {
         ArrayList<BTConnection> connectedList = mBtConnectionHandler.getConnectionList();
-
         for (BTConnection btConnection : connectedList) {
             btConnection.getBtConnectedThread().write(btDataPacket.getBuffer());
+        }
+    }
+
+    private void sendCommandToPlayer(OmiPlayer player, BTDataPacket btDataPacket) {
+        ArrayList<BTConnection> connectedList = mBtConnectionHandler.getConnectionList();
+        for (BTConnection btConnection : connectedList) {
+            if (btConnection.getBtDevice().getAddress().equalsIgnoreCase(player.getUniqueName())) {
+                btConnection.getBtConnectedThread().write(btDataPacket.getBuffer());
+                break;
+            }
+        }
+    }
+
+    //host received command handling
+    private void playerPlayedCard(OmiPlayer player, BTDataPacket btDataPacket) {
+        mOmiGameView.playerPlayedCard(player, btDataPacket);
+
+        for (OmiPlayer omiPlayer : mPlayerArrayList) {
+            if (omiPlayer.getPlayerNo() != 1 && omiPlayer.getPlayerNo() != player.getPlayerNo()) {
+                sendCommandToPlayer(omiPlayer, btDataPacket);
+            }
         }
     }
 
@@ -734,22 +813,12 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
         }
         mPopupLayout.setVisibility(View.GONE);
 
-        showConnectingDialog();
-
-        CharSequence text = "Join game succeeded!";
+        CharSequence text = "Join game succeeded. Please wait until others joined.";
         int duration = Toast.LENGTH_SHORT;
         Toast toast = Toast.makeText(getApplicationContext(), text, duration);
         toast.show();
 
         mOmiGameView.myName = BluetoothAdapter.getDefaultAdapter().getName();
-    }
-
-    private void showConnectingDialog() {
-        OmiUtils.showProgressDialog(OmiGameActivity.this, "Others are connecting...");
-    }
-
-    private void dismissConnectingDialog() {
-        OmiUtils.dismissProgressDialog();
     }
 
     private void deviceNotConnectedToHost() {
@@ -777,7 +846,6 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
             public void onClick(DialogInterface dialog, int which) {
                 mAlertDialog.dismiss();
                 if (!isJoinedToGame) {
-                    dismissConnectingDialog();
                     endGame();
                 }
             }
@@ -789,8 +857,8 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
     }
 
     private void startJoinedGame() {
-        dismissConnectingDialog();
         isGameStarted = true;
+        //TODO
     }
 
     private void writeDataToHost(BTDataPacket btDataPacket) {
@@ -802,6 +870,9 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
     }
 
     private void handleReceivedData(byte[] buffer) {
+
+        //TODO
+
         BTDataPacket btDataPacket = new BTDataPacket(buffer);
         switch (btDataPacket.getOpCode()) {
             case Constants.OpCodes.OPCODE_NONE :
@@ -821,11 +892,26 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
                 startJoinedGame();
             }
             break;
+            case Constants.OpCodes.OPCODE_PLAYER_PLAYED_CARD:
+            {
+                playerPlayedCard(btDataPacket);
+            }
+            break;
             default:
                 break;
         }
     }
 
+    private void playerPlayedCard(BTDataPacket btDataPacket) {
+        JSONObject bodyObj = btDataPacket.getBodyAsJson();
+        int playerNo = bodyObj.optInt(Constants.OmiJsonKey.PLAYER_NUMBER_KEY);
+        for (OmiPlayer omiPlayer : mPlayerArrayList) {
+            if (playerNo == omiPlayer.getPlayerNo()) {
+                mOmiGameView.playerPlayedCard(omiPlayer, btDataPacket);
+                break;
+            }
+        }
+    }
 
     /*
 	 * BTConnectionListener methods
@@ -925,4 +1011,19 @@ public class OmiGameActivity extends Activity implements BTConnectionListener {
             }
         });
     }
+
+    /*
+	 * OmiGameViewListener methods
+	 */
+    @Override
+    public void playerDidSelectTrumps(int playerNo, Constants.OmiSuit suit, boolean isFromNextHand) {
+
+    }
+
+    @Override
+    public void playerDidPlayACard(int playerNo, int cardNo, int option) {
+
+    }
+
+
 }

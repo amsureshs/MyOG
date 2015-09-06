@@ -9,6 +9,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.ssgames.com.omiplus.R;
+import com.ssgames.com.omiplus.bluetooth.BTDataPacket;
+import com.ssgames.com.omiplus.model.OmiPlayer;
 import com.ssgames.com.omiplus.util.Constants;
 
 import org.json.JSONObject;
@@ -19,8 +21,8 @@ public class OmiGameView extends LinearLayout {
     private static final String TAG = OmiGameView.class.getSimpleName();
 
     public interface OmiGameViewListener {
-        public void visibleButtonTapped();
-        public void partnerSelected(String partnerName);
+        public void playerDidSelectTrumps(int playerNo, Constants.OmiSuit suit, boolean isFromNextHand);
+        public void playerDidPlayACard(int playerNo, int cardNo, int option);
     }
 
     private OmiGameViewListener mOMOmiGameViewListener = null;
@@ -30,7 +32,7 @@ public class OmiGameView extends LinearLayout {
     private TextView playerName4 = null;
 
     public String myName = null;
-    private int myPlace = 0;
+    private int myPlayerNo = 0;
 
     public OmiGameView(Context context, OmiGameViewListener omiGameViewListener) {
         super(context);
@@ -54,22 +56,22 @@ public class OmiGameView extends LinearLayout {
         Log.v(TAG, "My Name: " + myName);
         Log.v(TAG, "Player names: " + playerNames.toString());
 
-        String player1 = playerNames.optString(Constants.MultiPlayerKey.PLAYER_NAME_1_KEY, "");
-        String player2 = playerNames.optString(Constants.MultiPlayerKey.PLAYER_NAME_2_KEY, "");
-        String player3 = playerNames.optString(Constants.MultiPlayerKey.PLAYER_NAME_3_KEY, "");
-        String player4 = playerNames.optString(Constants.MultiPlayerKey.PLAYER_NAME_4_KEY, "");
+        String player1 = playerNames.optString(Constants.OmiJsonKey.PLAYER_NAME_1_KEY, "");
+        String player2 = playerNames.optString(Constants.OmiJsonKey.PLAYER_NAME_2_KEY, "");
+        String player3 = playerNames.optString(Constants.OmiJsonKey.PLAYER_NAME_3_KEY, "");
+        String player4 = playerNames.optString(Constants.OmiJsonKey.PLAYER_NAME_4_KEY, "");
 
         if (player1.equalsIgnoreCase(myName)) {
-            myPlace = 1;
+            myPlayerNo = 1;
         }else if (player2.equalsIgnoreCase(myName)) {
-            myPlace = 2;
+            myPlayerNo = 2;
         }else if (player3.equalsIgnoreCase(myName)) {
-            myPlace = 3;
+            myPlayerNo = 3;
         }else if (player4.equalsIgnoreCase(myName)) {
-            myPlace = 4;
+            myPlayerNo = 4;
         }
 
-        switch (myPlace) {
+        switch (myPlayerNo) {
             case 1:
                 playerName1.setText(player1);
                 playerName2.setText(player2);
@@ -98,6 +100,10 @@ public class OmiGameView extends LinearLayout {
                 break;
         }
 
+    }
+
+    public void playerPlayedCard(OmiPlayer omiPlayer, BTDataPacket btDataPacket) {
+        //TODO
     }
 
     private void init(Context context, OmiGameViewListener omiGameViewListener) {
