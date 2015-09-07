@@ -21,6 +21,9 @@ public class OmiGameView extends LinearLayout {
     private static final String TAG = OmiGameView.class.getSimpleName();
 
     public interface OmiGameViewListener {
+
+        public void playerDidDistributeCards(int[] player1Set, int[] player2Set, int[] player3Set, int[] player4Set);
+
         public void playerIsShufflingPack(int playerNo);
         public void playerIsSelectingTrumps(int playerNo);
         public void playerDidSelectTrumps(int playerNo, Constants.OmiSuit suit, boolean isFromNextHand);
@@ -34,7 +37,10 @@ public class OmiGameView extends LinearLayout {
     private TextView playerName4 = null;
 
     public String myName = null;
-    private int myPlayerNo = 0;
+    public int myPlayerNo = 0;
+    public int myTeam = 0;
+
+    private int[] myCards;
 
     public OmiGameView(Context context, OmiGameViewListener omiGameViewListener) {
         super(context);
@@ -65,12 +71,16 @@ public class OmiGameView extends LinearLayout {
 
         if (player1.equalsIgnoreCase(myName)) {
             myPlayerNo = 1;
+            myTeam = 1;
         }else if (player2.equalsIgnoreCase(myName)) {
             myPlayerNo = 2;
+            myTeam = 2;
         }else if (player3.equalsIgnoreCase(myName)) {
             myPlayerNo = 3;
+            myTeam = 1;
         }else if (player4.equalsIgnoreCase(myName)) {
             myPlayerNo = 4;
+            myTeam = 2;
         }
 
         switch (myPlayerNo) {
@@ -102,6 +112,38 @@ public class OmiGameView extends LinearLayout {
                 break;
         }
 
+    }
+
+    public void shuffleThePack() {
+
+    }
+
+    public void playerShufflingPack(OmiPlayer omiPlayer, BTDataPacket btDataPacket) {
+
+    }
+
+    private void shuffleThePack(int option) {
+        //shuffling algorithm is going here
+    }
+
+    private void distributeTheCards() {
+        //TODO inform the listener
+
+        //TODO call your own receivedCards()
+    }
+
+    public void showReceivedCards(int[] cards) {
+        myCards = cards;
+        //TODO show first set
+    }
+
+    public void showReceivedCardsSecondSet(int[] cards) {
+        myCards = cards;
+        //TODO show first set
+    }
+
+    public void showTrumpsSelectedFromSecondHand() {
+        //TODO
     }
 
     public void playerPlayedCard(OmiPlayer omiPlayer, BTDataPacket btDataPacket) {

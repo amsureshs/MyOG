@@ -31,6 +31,7 @@ import com.ssgames.com.omiplus.views.OmiGameView;
 import com.ssgames.com.omiplus.views.OmiHostView;
 import com.ssgames.com.omiplus.views.OmiJoinView;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -613,6 +614,8 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
         sendCommandToAllConnections(btDataPacket);
 
         mOmiGameView.myName = player1;
+        mOmiGameView.myPlayerNo = 1;
+        mOmiGameView.myTeam = 1;
 
         JSONObject nameJson = null;
         try {
@@ -677,7 +680,168 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
         }
     }
 
+    private void sendCommandToPlayer(int playerNo, BTDataPacket btDataPacket) {
+
+        OmiPlayer player = mPlayerArrayList.get(playerNo - 1);
+
+        ArrayList<BTConnection> connectedList = mBtConnectionHandler.getConnectionList();
+        for (BTConnection btConnection : connectedList) {
+            if (btConnection.getBtDevice().getAddress().equalsIgnoreCase(player.getUniqueName())) {
+                btConnection.getBtConnectedThread().write(btDataPacket.getBuffer());
+                break;
+            }
+        }
+    }
+
     //host received command handling
+
+    private void cardsAvailableFrom(OmiPlayer player, BTDataPacket btDataPacket) {
+        JSONObject bodyJson = btDataPacket.getBodyAsJson();
+        if (bodyJson == null) {
+            Log.v(TAG, "cardsAvailableFrom " + "bodyJson is NULL");
+            return;
+        }
+
+        JSONArray arrayPlayer1 = bodyJson.optJSONArray(Constants.OmiJsonKey.PLAYER_NAME_1_KEY);
+        int[] player1Set = new int[8];
+        for (int i = 0; i < arrayPlayer1.length(); i++) {
+            player1Set[i] = arrayPlayer1.optInt(i);
+        }
+
+        JSONArray arrayPlayer2 = bodyJson.optJSONArray(Constants.OmiJsonKey.PLAYER_NAME_2_KEY);
+        int[] player2Set = new int[8];
+        for (int i = 0; i < arrayPlayer2.length(); i++) {
+            player2Set[i] = arrayPlayer2.optInt(i);
+        }
+
+        JSONArray arrayPlayer3 = bodyJson.optJSONArray(Constants.OmiJsonKey.PLAYER_NAME_3_KEY);
+        int[] player3Set = new int[8];
+        for (int i = 0; i < arrayPlayer3.length(); i++) {
+            player3Set[i] = arrayPlayer3.optInt(i);
+        }
+
+        JSONArray arrayPlayer4 = bodyJson.optJSONArray(Constants.OmiJsonKey.PLAYER_NAME_4_KEY);
+        int[] player4Set = new int[8];
+        for (int i = 0; i < arrayPlayer4.length(); i++) {
+            player4Set[i] = arrayPlayer4.optInt(i);
+        }
+
+        mOmiGameView.showReceivedCards(player1Set);
+
+        if (player.getPlayerNo() == 2) {
+            StringBuilder stringBuilder3 = new StringBuilder();
+            stringBuilder3.append(player3Set[0]);
+
+            StringBuilder stringBuilder4 = new StringBuilder();
+            stringBuilder4.append(player4Set[0]);
+
+            for (int i = 1; i < 8; i++) {
+                stringBuilder3.append(",");
+                stringBuilder3.append(player3Set[i]);
+
+                stringBuilder4.append(",");
+                stringBuilder4.append(player4Set[i]);
+            }
+
+            BTDataPacket dataPacket3 = new BTDataPacket();
+            dataPacket3.setOpCode(Constants.OpCodes.OPCODE_CARDS_AVAILABLE);
+
+            StringBuilder stringBuilderBody3 = new StringBuilder("{");
+            stringBuilderBody3.append("\"" + Constants.OmiJsonKey.PLAYER_NAME_3_KEY + "\":[" + stringBuilder3.toString() + "]}");
+
+            String jsonBody3 = stringBuilderBody3.toString();
+            dataPacket3.setBody(jsonBody3);
+
+
+            BTDataPacket dataPacket4 = new BTDataPacket();
+            dataPacket4.setOpCode(Constants.OpCodes.OPCODE_CARDS_AVAILABLE);
+
+            StringBuilder stringBuilderBody4 = new StringBuilder("{");
+            stringBuilderBody4.append("\"" + Constants.OmiJsonKey.PLAYER_NAME_4_KEY + "\":[" + stringBuilder4.toString() + "]}");
+
+            String jsonBody4 = stringBuilderBody4.toString();
+            dataPacket4.setBody(jsonBody4);
+
+            sendCommandToPlayer(3, dataPacket3);
+            sendCommandToPlayer(4, dataPacket4);
+
+        }else if (player.getPlayerNo() == 3) {
+
+            StringBuilder stringBuilder2 = new StringBuilder();
+            stringBuilder2.append(player2Set[0]);
+
+            StringBuilder stringBuilder4 = new StringBuilder();
+            stringBuilder4.append(player4Set[0]);
+
+            for (int i = 1; i < 8; i++) {
+                stringBuilder2.append(",");
+                stringBuilder2.append(player3Set[i]);
+
+                stringBuilder4.append(",");
+                stringBuilder4.append(player4Set[i]);
+            }
+
+            BTDataPacket dataPacket2 = new BTDataPacket();
+            dataPacket2.setOpCode(Constants.OpCodes.OPCODE_CARDS_AVAILABLE);
+
+            StringBuilder stringBuilderBody2 = new StringBuilder("{");
+            stringBuilderBody2.append("\"" + Constants.OmiJsonKey.PLAYER_NAME_2_KEY + "\":[" + stringBuilder2.toString() + "]}");
+
+            String jsonBody2 = stringBuilderBody2.toString();
+            dataPacket2.setBody(jsonBody2);
+
+
+            BTDataPacket dataPacket4 = new BTDataPacket();
+            dataPacket4.setOpCode(Constants.OpCodes.OPCODE_CARDS_AVAILABLE);
+
+            StringBuilder stringBuilderBody4 = new StringBuilder("{");
+            stringBuilderBody4.append("\"" + Constants.OmiJsonKey.PLAYER_NAME_4_KEY + "\":[" + stringBuilder4.toString() + "]}");
+
+            String jsonBody4 = stringBuilderBody4.toString();
+            dataPacket4.setBody(jsonBody4);
+
+            sendCommandToPlayer(2, dataPacket2);
+            sendCommandToPlayer(4, dataPacket4);
+
+        }else if (player.getPlayerNo() == 4) {
+            StringBuilder stringBuilder3 = new StringBuilder();
+            stringBuilder3.append(player3Set[0]);
+
+            StringBuilder stringBuilder2 = new StringBuilder();
+            stringBuilder2.append(player2Set[0]);
+
+            for (int i = 1; i < 8; i++) {
+                stringBuilder3.append(",");
+                stringBuilder3.append(player3Set[i]);
+
+                stringBuilder2.append(",");
+                stringBuilder2.append(player4Set[i]);
+            }
+
+            BTDataPacket dataPacket3 = new BTDataPacket();
+            dataPacket3.setOpCode(Constants.OpCodes.OPCODE_CARDS_AVAILABLE);
+
+            StringBuilder stringBuilderBody3 = new StringBuilder("{");
+            stringBuilderBody3.append("\"" + Constants.OmiJsonKey.PLAYER_NAME_3_KEY + "\":[" + stringBuilder3.toString() + "]}");
+
+            String jsonBody3 = stringBuilderBody3.toString();
+            dataPacket3.setBody(jsonBody3);
+
+
+            BTDataPacket dataPacket2 = new BTDataPacket();
+            dataPacket2.setOpCode(Constants.OpCodes.OPCODE_CARDS_AVAILABLE);
+
+            StringBuilder stringBuilderBody2 = new StringBuilder("{");
+            stringBuilderBody2.append("\"" + Constants.OmiJsonKey.PLAYER_NAME_2_KEY + "\":[" + stringBuilder2.toString() + "]}");
+
+            String jsonBody2 = stringBuilderBody2.toString();
+            dataPacket2.setBody(jsonBody2);
+
+            sendCommandToPlayer(3, dataPacket3);
+            sendCommandToPlayer(2, dataPacket2);
+        }
+    }
+
     private void playerPlayedCard(OmiPlayer player, BTDataPacket btDataPacket) {
         mOmiGameView.playerPlayedCard(player, btDataPacket);
 
@@ -826,7 +990,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
         //TODO
     }
 
-    private void writeDataToHost(BTDataPacket btDataPacket) {
+    private void sendDataToHost(BTDataPacket btDataPacket) {
         ArrayList<BTConnection> connectedList = mBtConnectionHandler.getConnectionList();
 
         for (BTConnection btConnection : connectedList) {
@@ -847,6 +1011,45 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
         }
     }
 
+    private void cardsAvailableFromHost(BTDataPacket btDataPacket) {
+        JSONObject bodyJson = btDataPacket.getBodyAsJson();
+        if (bodyJson == null) {
+            Log.v(TAG, "cardsAvailableFrom " + "bodyJson is NULL");
+            return;
+        }
+
+        switch (mOmiGameView.myPlayerNo) {
+            case 2:
+                break;
+            default:
+                break;
+        }
+
+        JSONArray arrayPlayer1 = bodyJson.optJSONArray(Constants.OmiJsonKey.PLAYER_NAME_1_KEY);
+        int[] player1Set = new int[8];
+        for (int i = 0; i < arrayPlayer1.length(); i++) {
+            player1Set[i] = arrayPlayer1.optInt(i);
+        }
+
+        JSONArray arrayPlayer2 = bodyJson.optJSONArray(Constants.OmiJsonKey.PLAYER_NAME_2_KEY);
+        int[] player2Set = new int[8];
+        for (int i = 0; i < arrayPlayer2.length(); i++) {
+            player2Set[i] = arrayPlayer2.optInt(i);
+        }
+
+        JSONArray arrayPlayer3 = bodyJson.optJSONArray(Constants.OmiJsonKey.PLAYER_NAME_3_KEY);
+        int[] player3Set = new int[8];
+        for (int i = 0; i < arrayPlayer3.length(); i++) {
+            player3Set[i] = arrayPlayer3.optInt(i);
+        }
+
+        JSONArray arrayPlayer4 = bodyJson.optJSONArray(Constants.OmiJsonKey.PLAYER_NAME_4_KEY);
+        int[] player4Set = new int[8];
+        for (int i = 0; i < arrayPlayer4.length(); i++) {
+            player4Set[i] = arrayPlayer4.optInt(i);
+        }
+    }
+
 
     //Host data handling
     private void handleReceivedData(BTConnection btConnection,  byte[] buffer) {
@@ -861,9 +1064,6 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
             }
         }
 
-
-        //TODO
-
         BTDataPacket btDataPacket = new BTDataPacket(buffer);
         switch (btDataPacket.getOpCode()) {
             case Constants.OpCodes.OPCODE_NONE :
@@ -871,12 +1071,22 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
 
             }
             break;
-            case Constants.OpCodes.OPCODE_PLAYER_SELECTED_TRUMPS:
+            case Constants.OpCodes.OPCODE_PLAYER_SHUFFLING_PACK :
             {
 
             }
             break;
-            case Constants.OpCodes.OPCODE_PLAYER_PLAYED_CARD:
+            case Constants.OpCodes.OPCODE_CARDS_AVAILABLE :
+            {
+                cardsAvailableFrom(omiPlayer, btDataPacket);
+            }
+            break;
+            case Constants.OpCodes.OPCODE_PLAYER_SELECTED_TRUMPS :
+            {
+
+            }
+            break;
+            case Constants.OpCodes.OPCODE_PLAYER_PLAYED_CARD :
             {
                 playerPlayedCard(omiPlayer, btDataPacket);
             }
@@ -910,9 +1120,49 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
                 startJoinedGame();
             }
             break;
-            case Constants.OpCodes.OPCODE_PLAYER_PLAYED_CARD:
+            case Constants.OpCodes.OPCODE_SHUFFLE_PACK :
+            {
+                if (mOmiGameView != null) mOmiGameView.shuffleThePack();
+            }
+            break;
+            case Constants.OpCodes.OPCODE_PLAYER_SHUFFLING_PACK :
+            {
+
+            }
+            break;
+            case Constants.OpCodes.OPCODE_CARDS_AVAILABLE :
+            {
+                cardsAvailableFromHost(btDataPacket);
+            }
+            break;
+            case Constants.OpCodes.OPCODE_SELECT_TRUMPS :
+            {
+
+            }
+            break;
+            case Constants.OpCodes.OPCODE_PLAYER_SELECTING_TRUMPS :
+            {
+
+            }
+            break;
+            case Constants.OpCodes.OPCODE_PLAYER_SELECTED_TRUMPS :
+            {
+
+            }
+            break;
+            case Constants.OpCodes.OPCODE_PLAYER_PLAYED_CARD :
             {
                 playerPlayedCard(btDataPacket);
+            }
+            break;
+            case Constants.OpCodes.OPCODE_PLAYER_WON_HAND :
+            {
+
+            }
+            break;
+            case Constants.OpCodes.OPCODE_GAME_END:
+            {
+
             }
             break;
             default:
@@ -932,7 +1182,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
             public void run() {
                 if (mIsHostGame) {
                     updateConnectedPartners();
-                }else {
+                } else {
                     isJoinedToGame = true;
                     connectedToHostedGame();
                 }
@@ -998,7 +1248,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
             @Override
             public void run() {
                 Log.v(TAG, "Data did send");
-                if(conn != null){
+                if(conn != null) {
                     Log.v(TAG, "Data did send to: " + conn.getBtDevice().getName());
                 }
             }
@@ -1022,6 +1272,54 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
     /*
 	 * OmiGameViewListener methods
 	 */
+    @Override
+    public void playerDidDistributeCards(int[] player1Set, int[] player2Set, int[] player3Set, int[] player4Set) {
+        if (mIsHostGame) {
+            //TODO tell others
+        }else {
+
+            BTDataPacket btDataPacket = new BTDataPacket();
+            btDataPacket.setOpCode(Constants.OpCodes.OPCODE_CARDS_AVAILABLE);
+
+            StringBuilder stringBuilder1 = new StringBuilder();
+            stringBuilder1.append(player1Set[0]);
+
+            StringBuilder stringBuilder2 = new StringBuilder();
+            stringBuilder2.append(player2Set[0]);
+
+            StringBuilder stringBuilder3 = new StringBuilder();
+            stringBuilder3.append(player3Set[0]);
+
+            StringBuilder stringBuilder4 = new StringBuilder();
+            stringBuilder4.append(player4Set[0]);
+
+            for (int i = 1; i < 8; i++) {
+                stringBuilder1.append(",");
+                stringBuilder1.append(player1Set[i]);
+
+                stringBuilder2.append(",");
+                stringBuilder2.append(player2Set[i]);
+
+                stringBuilder3.append(",");
+                stringBuilder3.append(player3Set[i]);
+
+                stringBuilder4.append(",");
+                stringBuilder4.append(player4Set[i]);
+            }
+
+            StringBuilder stringBuilder = new StringBuilder("{");
+            stringBuilder.append("\"" + Constants.OmiJsonKey.PLAYER_NAME_1_KEY + "\":[" + stringBuilder1.toString() + "],");
+            stringBuilder.append("\"" + Constants.OmiJsonKey.PLAYER_NAME_2_KEY + "\":[" + stringBuilder2.toString() + "],");
+            stringBuilder.append("\"" + Constants.OmiJsonKey.PLAYER_NAME_3_KEY + "\":[" + stringBuilder3.toString() + "],");
+            stringBuilder.append("\"" + Constants.OmiJsonKey.PLAYER_NAME_4_KEY + "\":[" + stringBuilder4.toString() + "]}");
+
+            String jsonBody = stringBuilder.toString();
+            btDataPacket.setBody(jsonBody);
+
+            sendDataToHost(btDataPacket);
+        }
+    }
+
     @Override
     public void playerIsShufflingPack(int playerNo) {
 
