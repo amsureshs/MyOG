@@ -148,6 +148,7 @@ public class OmiGameView extends LinearLayout {
 
     public void playerPlayedCard(OmiPlayer omiPlayer, BTDataPacket btDataPacket) {
         //TODO
+        //TODO
     }
 
     private void init(Context context, OmiGameViewListener omiGameViewListener) {
