@@ -42,15 +42,19 @@ public class Constants {
     }
 
     public enum OmiSuit {
-        SPADES,
-        HEARTS,
-        CLUBS,
-        DIAMONDS,
+        SPADES,// 1
+        HEARTS,// 2
+        CLUBS,// 3
+        DIAMONDS,// 4
         NONE
     }
 
     public enum OmiTeam {
         TEAM_A,
         TEAM_B
+    }
+
+    public class Points {
+        public static final int TRUMPS_POINTS = 20;
     }
 }

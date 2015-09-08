@@ -7,6 +7,13 @@ import com.ssgames.com.omiplus.util.Constants;
  */
 public class OmiHand {
     private Constants.OmiSuit suit = Constants.OmiSuit.NONE;
+    private int shuffledPlayerNo = 0;
+    private OmiRound currentRound;
+    private OmiRound lastRound;
+    private int player1Wins = 0;
+    private int player2Wins = 0;
+    private int player3Wins = 0;
+    private int player4Wins = 0;
 
     /*
 
@@ -48,4 +55,70 @@ public class OmiHand {
 
      */
 
+    public Constants.OmiSuit getSuit() {
+        return suit;
+    }
+
+    public void setSuit(Constants.OmiSuit suit) {
+        this.suit = suit;
+    }
+
+    public int getShuffledPlayerNo() {
+        return shuffledPlayerNo;
+    }
+
+    public void setShuffledPlayerNo(int shuffledPlayerNo) {
+        this.shuffledPlayerNo = shuffledPlayerNo;
+    }
+
+    public OmiRound getCurrentRound() {
+        return currentRound;
+    }
+
+    public void setCurrentRound(OmiRound currentRound) {
+        this.currentRound = currentRound;
+    }
+
+    public OmiRound getLastRound() {
+        return lastRound;
+    }
+
+    public void setLastRound(OmiRound lastRound) {
+        this.lastRound = lastRound;
+    }
+
+    public int getPlayer1Wins() {
+        return player1Wins;
+    }
+
+    public int getPlayer2Wins() {
+        return player2Wins;
+    }
+
+    public int getPlayer3Wins() {
+        return player3Wins;
+    }
+
+    public int getPlayer4Wins() {
+        return player4Wins;
+    }
+
+    public void addWinToPlayer(int playerNo) {
+        switch (playerNo) {
+            case 1:
+                player1Wins++;
+                break;
+            case 2:
+                player2Wins++;
+                break;
+            case 3:
+                player3Wins++;
+                break;
+            case 4:
+                player4Wins++;
+                break;
+            default:
+                break;
+        }
+    }
 }

@@ -23,11 +23,9 @@ public class OmiGameView extends LinearLayout {
     public interface OmiGameViewListener {
 
         public void playerDidDistributeCards(int[] player1Set, int[] player2Set, int[] player3Set, int[] player4Set);
-
-        public void playerIsShufflingPack(int playerNo);
-        public void playerIsSelectingTrumps(int playerNo);
-        public void playerDidSelectTrumps(int playerNo, Constants.OmiSuit suit, boolean isFromNextHand);
-        public void playerDidPlayACard(int playerNo, int cardNo, int option);
+        public void firstCardSetAppear();
+        public void playerDidSelectTrumps(int suitNo, int option);
+        public void secondCardSetAppear();
     }
 
     private OmiGameViewListener mOMOmiGameViewListener = null;
@@ -39,6 +37,8 @@ public class OmiGameView extends LinearLayout {
     public String myName = null;
     public int myPlayerNo = 0;
     public int myTeam = 0;
+
+    private boolean imInAction = false;
 
     private int[] myCards;
 
@@ -114,22 +114,51 @@ public class OmiGameView extends LinearLayout {
 
     }
 
-    public void shuffleThePack() {
-
+    public void cmdShuffleThePack() {
+        imInAction = true;
     }
 
     public void playerShufflingPack(OmiPlayer omiPlayer, BTDataPacket btDataPacket) {
+        String playerName = "";
+        if (omiPlayer != null) {
+            playerName = omiPlayer.getNickName();
+        }else if (btDataPacket != null) {
+            JSONObject bodyObj = btDataPacket.getBodyAsJson();
+            if (bodyObj != null) {
+                int playerNo = bodyObj.optInt(Constants.OmiJsonKey.PLAYER_NUMBER_KEY);
+                playerName = getPlayerNameOf(playerNo);
+            }
+        }
 
+        //TODO show shuffling
     }
 
     private void shuffleThePack(int option) {
         //shuffling algorithm is going here
-    }
 
-    private void distributeTheCards() {
-        //TODO inform the listener
+        int[] player1Set = new int[8];
+        int[] player2Set = new int[8];
+        int[] player3Set = new int[8];
+        int[] player4Set = new int[8];
 
-        //TODO call your own receivedCards()
+        if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.playerDidDistributeCards(player1Set, player2Set, player3Set, player4Set);
+
+        switch (myPlayerNo) {
+            case 1:
+                showReceivedCards(player1Set);
+                break;
+            case 2:
+                showReceivedCards(player2Set);
+                break;
+            case 3:
+                showReceivedCards(player3Set);
+                break;
+            case 4:
+                showReceivedCards(player4Set);
+                break;
+            default:
+                break;
+        }
     }
 
     public void showReceivedCards(int[] cards) {
@@ -137,17 +166,51 @@ public class OmiGameView extends LinearLayout {
         //TODO show first set
     }
 
-    public void showReceivedCardsSecondSet(int[] cards) {
-        myCards = cards;
-        //TODO show first set
+    private void firstSetShowAnimationEnd() {
+        if (imInAction) {
+            imInAction = false;
+            if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.firstCardSetAppear();
+        }
+    }
+
+    public void cmdSelectTrumps() {
+        imInAction = true;
+        //TODO show select trumps screen
+    }
+
+    public void playerSelectingTrumps(OmiPlayer omiPlayer) {
+        //TODO show selecting
+    }
+
+    public void playerSelectedTrumps(int suitNo, int option) {
+        //TODO show animation
+        if (imInAction) {
+            if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.playerDidSelectTrumps(suitNo, option);
+        }
     }
 
     public void showTrumpsSelectedFromSecondHand() {
         //TODO
     }
 
+    private void trumpsSelectAnimationEnd() {
+        showReceivedCardsSecondSet();
+    }
+
+    private void showReceivedCardsSecondSet() {
+        //TODO show first set
+        //TODO show sort button
+    }
+
+    private void secondSetShowAnimationEnd() {
+        if (imInAction) {
+            imInAction = false;
+            if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.secondCardSetAppear();
+        }
+    }
+
     public void playerPlayedCard(OmiPlayer omiPlayer, BTDataPacket btDataPacket) {
-        //TODO
+        //TODO omiPlayer may have only playerNo
         //TODO
     }
 
@@ -160,5 +223,27 @@ public class OmiGameView extends LinearLayout {
         playerName2 = (TextView)inflater.findViewById(R.id.txtPlayerName2);
         playerName3 = (TextView)inflater.findViewById(R.id.txtPlayerName3);
         playerName4 = (TextView)inflater.findViewById(R.id.txtPlayerName4);
+    }
+
+    private String getPlayerNameOf(int playerNo) {
+        String name = "";
+        switch (playerNo) {
+            case 1:
+                name = playerName1.getText().toString();
+                break;
+            case 2:
+                name = playerName2.getText().toString();
+                break;
+            case 3:
+                name = playerName3.getText().toString();
+                break;
+            case 4:
+                name = playerName4.getText().toString();
+                break;
+            default:
+                break;
+        }
+
+        return name;
     }
 }
