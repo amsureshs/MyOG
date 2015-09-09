@@ -6,8 +6,9 @@ import com.ssgames.com.omiplus.util.Constants;
  * Created by Admin on 9/8/15.
  */
 public class OmiRound {
-    private Constants.OmiSuit suit = Constants.OmiSuit.NONE;
-    private Constants.OmiSuit trumps = Constants.OmiSuit.NONE;
+    private int roundNo = 0;
+    private int suit = Constants.OmiSuit.NONE;
+    private int trumps = Constants.OmiSuit.NONE;
     private int startedPlayerNo = 0;
     private int player1Card = 0;
     private int player2Card = 0;
@@ -15,19 +16,27 @@ public class OmiRound {
     private int player4Card = 0;
     private int winner = 0;
 
-    public Constants.OmiSuit getSuit() {
+    public int getRoundNo() {
+        return roundNo;
+    }
+
+    public void setRoundNo(int roundNo) {
+        this.roundNo = roundNo;
+    }
+
+    public int getSuit() {
         return suit;
     }
 
-    public void setSuit(Constants.OmiSuit suit) {
+    public void setSuit(int suit) {
         this.suit = suit;
     }
 
-    public Constants.OmiSuit getTrumps() {
+    public int getTrumps() {
         return trumps;
     }
 
-    public void setTrumps(Constants.OmiSuit trumps) {
+    public void setTrumps(int trumps) {
         this.trumps = trumps;
     }
 
@@ -71,6 +80,25 @@ public class OmiRound {
         this.player4Card = player4Card;
     }
 
+    public void setPlayerCard(int playerNo, int cardNo) {
+        switch (playerNo) {
+            case 1:
+                this.player1Card = cardNo;
+                break;
+            case 2:
+                this.player2Card = cardNo;
+                break;
+            case 3:
+                this.player3Card = cardNo;
+                break;
+            case 4:
+                this.player4Card = cardNo;
+                break;
+            default:
+                break;
+        }
+    }
+
     public int getWinner() {
 
         int player1Points = getPlayerPoints(player1Card);
@@ -97,7 +125,7 @@ public class OmiRound {
 
     private int getPlayerPoints(int playerCard) {
 
-        Constants.OmiSuit playerSuit = Constants.OmiSuit.NONE;
+        int playerSuit = Constants.OmiSuit.NONE;
         int cardPoints = 0;
 
         if (playerCard < 200) {
@@ -123,6 +151,56 @@ public class OmiRound {
         }
 
         return cardPoints;
+    }
+
+    public boolean didAllPlayersPlay() {
+        if (player1Card != 0 && player2Card != 0 && player3Card != 0 && player4Card != 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public int getNextPlayer() {
+
+        if (player1Card != 0 && player2Card != 0 && player3Card != 0 && player4Card != 0) {
+            return 0;
+        }
+
+        switch (startedPlayerNo) {
+            case 1:
+            {
+                if (player2Card == 0) return 2;
+                if (player3Card == 0) return 3;
+                if (player4Card == 0) return 4;
+            }
+                break;
+            case 2:
+            {
+                if (player3Card == 0) return 3;
+                if (player4Card == 0) return 4;
+                if (player1Card == 0) return 1;
+            }
+                break;
+            case 3:
+            {
+                if (player4Card == 0) return 4;
+                if (player1Card == 0) return 1;
+                if (player2Card == 0) return 2;
+            }
+                break;
+            case 4:
+            {
+                if (player1Card == 0) return 1;
+                if (player2Card == 0) return 2;
+                if (player3Card == 0) return 3;
+            }
+                break;
+            default:
+                break;
+        }
+
+        return 0;
     }
 
 }

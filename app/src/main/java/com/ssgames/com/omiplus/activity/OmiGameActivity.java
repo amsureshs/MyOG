@@ -24,10 +24,8 @@ import com.ssgames.com.omiplus.bluetooth.BTConnection;
 import com.ssgames.com.omiplus.bluetooth.BTConnectionHandler;
 import com.ssgames.com.omiplus.bluetooth.BTConnectionListener;
 import com.ssgames.com.omiplus.bluetooth.BTDataPacket;
-import com.ssgames.com.omiplus.model.OmiGameStat;
 import com.ssgames.com.omiplus.model.OmiHand;
 import com.ssgames.com.omiplus.model.OmiPlayer;
-import com.ssgames.com.omiplus.model.OmiRound;
 import com.ssgames.com.omiplus.util.Constants;
 import com.ssgames.com.omiplus.util.SettingsManager;
 import com.ssgames.com.omiplus.views.OmiGameView;
@@ -82,7 +80,6 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
 
 
     private boolean isGameStarted = false;
-    private OmiGameStat mOmiGameStat = new OmiGameStat();
 
     /*
 	 * Bluetooth broadcast receiver
@@ -669,10 +666,10 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
 
     private void sendShuffleCommands() {
         mOmiGameView.mOmiHand = new OmiHand();
-        int lastShuffledPlayerNo = mOmiGameStat.getLastShuffledPlayerNo();
+        int lastShuffledPlayerNo = mOmiGameView.mOmiGameStat.getLastShuffledPlayerNo();
         if (lastShuffledPlayerNo == 0 || lastShuffledPlayerNo == 4) {
             mOmiGameView.cmdShuffleThePack();
-            mOmiGameStat.setLastShuffledPlayerNo(1);
+            mOmiGameView.mOmiGameStat.setLastShuffledPlayerNo(1);
             mOmiGameView.mOmiHand.setShuffledPlayerNo(1);
 
             StringBuilder stringBuilderBody = new StringBuilder("{");
@@ -697,7 +694,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
 
             OmiPlayer omiPlayer = mPlayerArrayList.get(1);
             mOmiGameView.playerShufflingPack(omiPlayer, null);
-            mOmiGameStat.setLastShuffledPlayerNo(2);
+            mOmiGameView.mOmiGameStat.setLastShuffledPlayerNo(2);
             mOmiGameView.mOmiHand.setShuffledPlayerNo(2);
 
             StringBuilder stringBuilderBody = new StringBuilder("{");
@@ -722,7 +719,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
 
             OmiPlayer omiPlayer = mPlayerArrayList.get(2);
             mOmiGameView.playerShufflingPack(omiPlayer, null);
-            mOmiGameStat.setLastShuffledPlayerNo(3);
+            mOmiGameView.mOmiGameStat.setLastShuffledPlayerNo(3);
             mOmiGameView.mOmiHand.setShuffledPlayerNo(3);
 
             StringBuilder stringBuilderBody = new StringBuilder("{");
@@ -747,7 +744,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
 
             OmiPlayer omiPlayer = mPlayerArrayList.get(3);
             mOmiGameView.playerShufflingPack(omiPlayer, null);
-            mOmiGameStat.setLastShuffledPlayerNo(4);
+            mOmiGameView.mOmiGameStat.setLastShuffledPlayerNo(4);
             mOmiGameView.mOmiHand.setShuffledPlayerNo(4);
 
             StringBuilder stringBuilderBody = new StringBuilder("{");
@@ -1216,7 +1213,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
                 JSONObject bodyJson = btDataPacket.getBodyAsJson();
                 int playerNo = bodyJson.optInt(Constants.OmiJsonKey.PLAYER_NUMBER_KEY);
                 int suitNo = bodyJson.optInt(Constants.OmiJsonKey.SELECTED_TRUMPS_KEY);
-                int option = bodyJson.optInt(Constants.OmiJsonKey.SELECTED_TRUMPS_OPTION_KEY);
+                int option = bodyJson.optInt(Constants.OmiJsonKey.OPTION_KEY);
 
                 BTDataPacket dataPacket = new BTDataPacket();
                 dataPacket.setOpCode(Constants.OpCodes.OPCODE_CARDS_AVAILABLE);
@@ -1224,7 +1221,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
                 StringBuilder stringBuilderBody = new StringBuilder("{");
                 stringBuilderBody.append("\"" + Constants.OmiJsonKey.PLAYER_NUMBER_KEY + "\":" + playerNo + ",");
                 stringBuilderBody.append("\"" + Constants.OmiJsonKey.SELECTED_TRUMPS_KEY + "\":" + suitNo + ",");
-                stringBuilderBody.append("\"" + Constants.OmiJsonKey.SELECTED_TRUMPS_OPTION_KEY + "\":" + option + "}");
+                stringBuilderBody.append("\"" + Constants.OmiJsonKey.OPTION_KEY + "\":" + option + "}");
                 String jsonBody = stringBuilderBody.toString();
 
                 dataPacket.setBody(jsonBody);
@@ -1268,7 +1265,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
             {
                 mOmiGameView.mOmiHand = new OmiHand();
                 mOmiGameView.mOmiHand.setShuffledPlayerNo(mOmiGameView.myPlayerNo);
-                mOmiGameStat.setLastShuffledPlayerNo(mOmiGameView.myPlayerNo);
+                mOmiGameView.mOmiGameStat.setLastShuffledPlayerNo(mOmiGameView.myPlayerNo);
                 mOmiGameView.cmdShuffleThePack();
             }
             break;
@@ -1278,7 +1275,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
                 int playerNo = bodyJson.optInt(Constants.OmiJsonKey.PLAYER_NUMBER_KEY);
                 mOmiGameView.mOmiHand = new OmiHand();
                 mOmiGameView.mOmiHand.setShuffledPlayerNo(playerNo);
-                mOmiGameStat.setLastShuffledPlayerNo(playerNo);
+                mOmiGameView.mOmiGameStat.setLastShuffledPlayerNo(playerNo);
 
                 if (mOmiGameView != null) mOmiGameView.playerShufflingPack(null, btDataPacket);
             }
@@ -1302,7 +1299,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
             {
                 JSONObject bodyJson = btDataPacket.getBodyAsJson();
                 int suitNo = bodyJson.optInt(Constants.OmiJsonKey.SELECTED_TRUMPS_KEY);
-                int option = bodyJson.optInt(Constants.OmiJsonKey.SELECTED_TRUMPS_OPTION_KEY);
+                int option = bodyJson.optInt(Constants.OmiJsonKey.OPTION_KEY);
 
                 mOmiGameView.playerSelectedTrumps(suitNo, option);
             }
@@ -1539,7 +1536,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
         StringBuilder stringBuilderBody = new StringBuilder("{");
         stringBuilderBody.append("\"" + Constants.OmiJsonKey.PLAYER_NUMBER_KEY + "\":" + mOmiGameView.myPlayerNo + ",");
         stringBuilderBody.append("\"" + Constants.OmiJsonKey.SELECTED_TRUMPS_KEY + "\":" + suitNo + ",");
-        stringBuilderBody.append("\"" + Constants.OmiJsonKey.SELECTED_TRUMPS_OPTION_KEY + "\":" + option + "}");
+        stringBuilderBody.append("\"" + Constants.OmiJsonKey.OPTION_KEY + "\":" + option + "}");
         String jsonBody = stringBuilderBody.toString();
         btDataPacket.setBody(jsonBody);
 
@@ -1554,6 +1551,40 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
 
     @Override
     public void secondCardSetAppear() {
+
+    }
+
+    @Override
+    public void playerDidPlayCard(int cardNo, int option) {
+
+        BTDataPacket btDataPacket = new BTDataPacket();
+        btDataPacket.setOpCode(Constants.OpCodes.OPCODE_PLAYER_PLAYED_CARD);
+
+        StringBuilder stringBuilderBody = new StringBuilder("{");
+        stringBuilderBody.append("\"" + Constants.OmiJsonKey.PLAYER_NUMBER_KEY + "\":" + mOmiGameView.myPlayerNo + ",");
+        stringBuilderBody.append("\"" + Constants.OmiJsonKey.CARD_NUMBER_KEY + "\":" + cardNo + ",");
+        stringBuilderBody.append("\"" + Constants.OmiJsonKey.OPTION_KEY + "\":" + option + "}");
+        String jsonBody = stringBuilderBody.toString();
+        btDataPacket.setBody(jsonBody);
+
+        if (mIsHostGame) {
+            sendCommandToPlayer(2, btDataPacket);
+            sendCommandToPlayer(3, btDataPacket);
+            sendCommandToPlayer(4, btDataPacket);
+        }else {
+            sendDataToHost(btDataPacket);
+        }
+    }
+
+    @Override
+    public void timeToNextHand() {
+        if (mIsHostGame) {
+            sendShuffleCommands();
+        }
+    }
+
+    @Override
+    public void gameDidEndWithWinningTeam(int team) {
 
     }
 }

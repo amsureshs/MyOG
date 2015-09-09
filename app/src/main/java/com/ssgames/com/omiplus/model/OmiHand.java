@@ -6,10 +6,10 @@ import com.ssgames.com.omiplus.util.Constants;
  * Created by sura on 9/5/15.
  */
 public class OmiHand {
-    private Constants.OmiSuit suit = Constants.OmiSuit.NONE;
+    private int trumps = Constants.OmiSuit.NONE;
     private int shuffledPlayerNo = 0;
-    private OmiRound currentRound;
-    private OmiRound lastRound;
+    private OmiRound currentRound = null;
+    private OmiRound lastRound = null;
     private int player1Wins = 0;
     private int player2Wins = 0;
     private int player3Wins = 0;
@@ -55,12 +55,12 @@ public class OmiHand {
 
      */
 
-    public Constants.OmiSuit getSuit() {
-        return suit;
+    public int getTrumps() {
+        return trumps;
     }
 
-    public void setSuit(Constants.OmiSuit suit) {
-        this.suit = suit;
+    public void setTrumps(int trumps) {
+        this.trumps = trumps;
     }
 
     public int getShuffledPlayerNo() {
@@ -120,5 +120,23 @@ public class OmiHand {
             default:
                 break;
         }
+    }
+
+    public boolean isHandOver() {
+        if (player1Wins + player2Wins + player3Wins + player4Wins == 8) {
+            return true;
+        }
+        return false;
+    }
+
+    public int getWinningTeam() {
+
+        if (player1Wins + player3Wins > player2Wins + player4Wins) {
+            return 1;
+        }else if (player1Wins + player3Wins < player2Wins + player4Wins) {
+            return 2;
+        }
+
+        return 0;
     }
 }

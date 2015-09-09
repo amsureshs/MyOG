@@ -7,6 +7,7 @@ public class OmiGameStat {
     private int lastShuffledPlayerNo = 0;
     private int team1Wins = 0;
     private int team2Wins = 0;
+    private int draws = 0;
     private int player1TotalWins = 0;
     private int player2TotalWins = 0;
     private int player3TotalWins = 0;
@@ -26,6 +27,10 @@ public class OmiGameStat {
 
     public int getTeam2Wins() {
         return team2Wins;
+    }
+
+    public int getDraws() {
+        return draws;
     }
 
     public int getPlayer1TotalWins() {
@@ -52,6 +57,10 @@ public class OmiGameStat {
         }
     }
 
+    public void addDraws() {
+        draws++;
+    }
+
     public void addWinToPlayer(int playerNo) {
         switch (playerNo) {
             case 1:
@@ -69,5 +78,15 @@ public class OmiGameStat {
             default:
                 break;
         }
+    }
+
+    public int getTeamIfWin() {
+        if (team1Wins >= 10) {
+            return 1;
+        }else if (team2Wins >= 10) {
+            return 2;
+        }
+
+        return 0;
     }
 }

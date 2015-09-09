@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import com.ssgames.com.omiplus.R;
 import com.ssgames.com.omiplus.bluetooth.BTDataPacket;
+import com.ssgames.com.omiplus.model.OmiGameStat;
 import com.ssgames.com.omiplus.model.OmiHand;
 import com.ssgames.com.omiplus.model.OmiPlayer;
 import com.ssgames.com.omiplus.model.OmiRound;
@@ -28,8 +29,12 @@ public class OmiGameView extends LinearLayout {
         public void firstCardSetAppear();
         public void playerDidSelectTrumps(int suitNo, int option);
         public void secondCardSetAppear();
+        public void playerDidPlayCard(int cardNo, int option);
+        public void timeToNextHand();
+        public void gameDidEndWithWinningTeam(int team);
     }
 
+    private Context mContext = null;
     private OmiGameViewListener mOMOmiGameViewListener = null;
     private TextView playerName1 = null;
     private TextView playerName2 = null;
@@ -40,6 +45,7 @@ public class OmiGameView extends LinearLayout {
     public int myPlayerNo = 0;
     public int myTeam = 0;
 
+    public OmiGameStat mOmiGameStat = null;
     public OmiHand mOmiHand = null;
     public OmiRound mOmiRound = null;
 
@@ -183,11 +189,25 @@ public class OmiGameView extends LinearLayout {
         //TODO show select trumps screen
     }
 
+    private void showFourSuitTrumpsSelectMessage() {
+        int suitNo1 = getSuitOfCard(myCards[0]);
+        int suitNo2 = getSuitOfCard(myCards[1]);
+        int suitNo3 = getSuitOfCard(myCards[2]);
+        int suitNo4 = getSuitOfCard(myCards[3]);
+
+        if (suitNo1 != suitNo2 && suitNo1 != suitNo3 && suitNo1 != suitNo4 && suitNo2 != suitNo3 && suitNo2 != suitNo4 && suitNo3 != suitNo4) {
+
+        }
+    }
+
     public void playerSelectingTrumps(OmiPlayer omiPlayer) {
         //TODO show selecting
     }
 
     public void playerSelectedTrumps(int suitNo, int option) {
+
+        mOmiHand.setTrumps(suitNo);
+
         //TODO show animation
         if (iDidTheAction) {
             if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.playerDidSelectTrumps(suitNo, option);
@@ -233,18 +253,108 @@ public class OmiGameView extends LinearLayout {
         //TODO
     }
 
-    private void playerPlayedWithOption() {
+    //this is call after current player played or on command
+    private void playerPlayedWithOption(int playerNo, int cardNo, int option) {
 
+        if (mOmiRound == null) {
+            mOmiRound = new OmiRound();
+            mOmiRound.setTrumps(mOmiHand.getTrumps());
+            mOmiRound.setSuit(getSuitOfCard(cardNo));
+
+            OmiRound lastRound = mOmiHand.getCurrentRound();
+
+            if (lastRound == null) {
+                mOmiRound.setRoundNo(1);
+                mOmiHand.setCurrentRound(mOmiRound);
+                mOmiHand.setLastRound(mOmiRound);
+            }else {
+                mOmiRound.setRoundNo(lastRound.getRoundNo() + 1);
+                mOmiHand.setCurrentRound(mOmiRound);
+                mOmiHand.setLastRound(lastRound);
+            }
+        }
+
+        if (mOmiRound.getStartedPlayerNo() == 0) {
+            mOmiRound.setStartedPlayerNo(myPlayerNo);
+        }
+
+        mOmiRound.setPlayerCard(myPlayerNo, cardNo);
+
+        if (iDidTheAction) {
+            if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.playerDidPlayCard(cardNo, option);
+        }
+        //TODO show play card animation
     }
 
     public void playerPlayedCard(OmiPlayer omiPlayer, BTDataPacket btDataPacket) {
+
+        JSONObject bodyJson = btDataPacket.getBodyAsJson();
+
+        int playerNo = omiPlayer.getPlayerNo();
+        int cardNo = bodyJson.optInt(Constants.OmiJsonKey.CARD_NUMBER_KEY);
+        int option = bodyJson.optInt(Constants.OmiJsonKey.OPTION_KEY);
+
+        playerPlayedWithOption(playerNo, cardNo, option);
+
         //TODO omiPlayer may have only playerNo
         //TODO
     }
 
-    private void init(Context context, OmiGameViewListener omiGameViewListener) {
-        mOMOmiGameViewListener = omiGameViewListener;
+    private void playCardAnimationEnd() {
+        judgeGame();
+    }
 
+    private void judgeGame() {
+        if (mOmiRound.didAllPlayersPlay()) {
+            int winner = mOmiRound.getWinner();
+            mOmiHand.addWinToPlayer(winner);
+            mOmiGameStat.addWinToPlayer(winner);
+
+            if (mOmiHand.isHandOver()) {
+
+                int winningTeam = mOmiHand.getWinningTeam();
+                if (winningTeam == 1) {
+                    mOmiGameStat.addWinToTeam(1);
+                }else if (winningTeam == 2) {
+                    mOmiGameStat.addWinToTeam(2);
+                }else {
+                    mOmiGameStat.addDraws();
+                }
+
+                int endReach = mOmiGameStat.getTeamIfWin();
+                if (endReach == 0) {
+                    if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.timeToNextHand();
+                }else if (endReach == 1) {
+                    showWinningScreen(1);
+                }else if (endReach == 2) {
+                    showWinningScreen(2);
+                }
+            }else {
+                if (winner == myPlayerNo) {
+                    mOmiRound = null;
+                    enablePlayCards(true, 0);
+                }
+            }
+        } else {
+            int nextPlayer = mOmiRound.getNextPlayer();
+            if (nextPlayer == myPlayerNo) {
+                enablePlayCards(true, mOmiRound.getSuit());
+            }
+        }
+    }
+
+    private void showWinningScreen(int team) {
+
+    }
+
+    private void winningScreenAnimationEnd() {
+        if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.gameDidEndWithWinningTeam(mOmiGameStat.getTeamIfWin());
+    }
+
+    private void init(Context context, OmiGameViewListener omiGameViewListener) {
+        mContext = context;
+        mOMOmiGameViewListener = omiGameViewListener;
+        mOmiGameStat = new OmiGameStat();
         View inflater = LayoutInflater.from(context).inflate(R.layout.view_game, this, true);
 
         playerName1  = (TextView)inflater.findViewById(R.id.txtPlayerName1);
@@ -273,5 +383,19 @@ public class OmiGameView extends LinearLayout {
         }
 
         return name;
+    }
+
+    private int getSuitOfCard(int cardNo) {
+        if (cardNo < 200) {
+            return Constants.OmiSuit.SPADES;
+        }else if (cardNo < 300) {
+            return Constants.OmiSuit.HEARTS;
+        }else if (cardNo < 400) {
+            return Constants.OmiSuit.CLUBS;
+        }else if (cardNo < 500) {
+            return Constants.OmiSuit.DIAMONDS;
+        }else {
+            return Constants.OmiSuit.NONE;
+        }
     }
 }

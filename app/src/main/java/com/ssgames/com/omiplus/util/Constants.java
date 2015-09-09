@@ -16,9 +16,8 @@ public class Constants {
 
         public static final String PLAYER_NUMBER_KEY = "pn_k";
         public static final String CARD_NUMBER_KEY = "cn_k";
-        public static final String PLAYED_OPTION_KEY = "po_k";
         public static final String SELECTED_TRUMPS_KEY = "tr_k";
-        public static final String SELECTED_TRUMPS_OPTION_KEY = "to_k";
+        public static final String OPTION_KEY = "op_k";
 	}
 	
 	public class ExtraKey {
@@ -41,12 +40,20 @@ public class Constants {
         public static final int OPCODE_PLAYER_WON_HAND = 11;
     }
 
-    public enum OmiSuit {
-        SPADES,// 1
-        HEARTS,// 2
-        CLUBS,// 3
-        DIAMONDS,// 4
-        NONE
+//    public enum OmiSuit {
+//        SPADES,// 1
+//        HEARTS,// 2
+//        CLUBS,// 3
+//        DIAMONDS,// 4
+//        NONE
+//    }
+
+    public class OmiSuit {
+        public static final int SPADES = 1;
+        public static final int HEARTS = 2;
+        public static final int CLUBS = 3;
+        public static final int DIAMONDS = 4;
+        public static final int NONE = 0;
     }
 
     public enum OmiTeam {
