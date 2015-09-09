@@ -8,6 +8,7 @@ import com.ssgames.com.omiplus.util.Constants;
 public class OmiRound {
     private Constants.OmiSuit suit = Constants.OmiSuit.NONE;
     private Constants.OmiSuit trumps = Constants.OmiSuit.NONE;
+    private int startedPlayerNo = 0;
     private int player1Card = 0;
     private int player2Card = 0;
     private int player3Card = 0;
@@ -28,6 +29,14 @@ public class OmiRound {
 
     public void setTrumps(Constants.OmiSuit trumps) {
         this.trumps = trumps;
+    }
+
+    public int getStartedPlayerNo() {
+        return startedPlayerNo;
+    }
+
+    public void setStartedPlayerNo(int startedPlayerNo) {
+        this.startedPlayerNo = startedPlayerNo;
     }
 
     public int getPlayer1Card() {

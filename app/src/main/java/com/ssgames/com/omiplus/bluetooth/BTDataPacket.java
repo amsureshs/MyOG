@@ -130,9 +130,10 @@ public class BTDataPacket {
 
     public JSONObject getBodyAsJson() {
         if (jsonObject != null) {
-            return jsonObject.optJSONObject(BODY);
+			JSONObject obj = jsonObject.optJSONObject(BODY);
+            return (obj != null) ? obj : new JSONObject();
         }
-        return null;
+        return new JSONObject();
     }
 
 	public void setBody(String body) {

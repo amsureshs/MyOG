@@ -10,7 +10,9 @@ import android.widget.TextView;
 
 import com.ssgames.com.omiplus.R;
 import com.ssgames.com.omiplus.bluetooth.BTDataPacket;
+import com.ssgames.com.omiplus.model.OmiHand;
 import com.ssgames.com.omiplus.model.OmiPlayer;
+import com.ssgames.com.omiplus.model.OmiRound;
 import com.ssgames.com.omiplus.util.Constants;
 
 import org.json.JSONObject;
@@ -38,7 +40,10 @@ public class OmiGameView extends LinearLayout {
     public int myPlayerNo = 0;
     public int myTeam = 0;
 
-    private boolean imInAction = false;
+    public OmiHand mOmiHand = null;
+    public OmiRound mOmiRound = null;
+
+    private boolean iDidTheAction = false;
 
     private int[] myCards;
 
@@ -115,7 +120,7 @@ public class OmiGameView extends LinearLayout {
     }
 
     public void cmdShuffleThePack() {
-        imInAction = true;
+        iDidTheAction = true;
     }
 
     public void playerShufflingPack(OmiPlayer omiPlayer, BTDataPacket btDataPacket) {
@@ -167,14 +172,14 @@ public class OmiGameView extends LinearLayout {
     }
 
     private void firstSetShowAnimationEnd() {
-        if (imInAction) {
-            imInAction = false;
+        if (iDidTheAction) {
+            iDidTheAction = false;
             if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.firstCardSetAppear();
         }
     }
 
     public void cmdSelectTrumps() {
-        imInAction = true;
+        iDidTheAction = true;
         //TODO show select trumps screen
     }
 
@@ -184,8 +189,12 @@ public class OmiGameView extends LinearLayout {
 
     public void playerSelectedTrumps(int suitNo, int option) {
         //TODO show animation
-        if (imInAction) {
+        if (iDidTheAction) {
             if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.playerDidSelectTrumps(suitNo, option);
+        }else {
+            if (option == 1) {
+                showTrumpsSelectedFromSecondHand();
+            }
         }
     }
 
@@ -203,10 +212,29 @@ public class OmiGameView extends LinearLayout {
     }
 
     private void secondSetShowAnimationEnd() {
-        if (imInAction) {
-            imInAction = false;
+
+        showSortButton(true);
+
+        if (iDidTheAction) {
+            enablePlayCards(true, 0);
+            iDidTheAction = false;
             if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.secondCardSetAppear();
         }
+    }
+
+    private void showSortButton(boolean show) {
+        //TODO
+    }
+
+    private void enablePlayCards(boolean enable, int suitNo) {
+        if (enable) {
+            iDidTheAction = true;
+        }
+        //TODO
+    }
+
+    private void playerPlayedWithOption() {
+
     }
 
     public void playerPlayedCard(OmiPlayer omiPlayer, BTDataPacket btDataPacket) {
