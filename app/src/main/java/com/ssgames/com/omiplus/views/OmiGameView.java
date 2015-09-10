@@ -1,6 +1,8 @@
 package com.ssgames.com.omiplus.views;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,6 +19,8 @@ import com.ssgames.com.omiplus.model.OmiRound;
 import com.ssgames.com.omiplus.util.Constants;
 
 import org.json.JSONObject;
+
+import java.util.Random;
 
 
 public class OmiGameView extends LinearLayout {
@@ -41,6 +45,8 @@ public class OmiGameView extends LinearLayout {
     private TextView playerName3 = null;
     private TextView playerName4 = null;
 
+    private AlertDialog mAlertDialog = null;
+
     public String myName = null;
     public int myPlayerNo = 0;
     public int myTeam = 0;
@@ -51,6 +57,7 @@ public class OmiGameView extends LinearLayout {
 
     private boolean iDidTheAction = false;
 
+    private int[] mPack = null;
     private int[] myCards;
 
     public OmiGameView(Context context, OmiGameViewListener omiGameViewListener) {
@@ -127,6 +134,7 @@ public class OmiGameView extends LinearLayout {
 
     public void cmdShuffleThePack() {
         iDidTheAction = true;
+        if (mPack == null) initPack();
     }
 
     public void playerShufflingPack(OmiPlayer omiPlayer, BTDataPacket btDataPacket) {
@@ -145,12 +153,76 @@ public class OmiGameView extends LinearLayout {
     }
 
     private void shuffleThePack(int option) {
-        //shuffling algorithm is going here
+
+        int shuffleCount = 0;
+        switch (option) {
+            case 1:
+                shuffleCount = 3;
+                break;
+            case 2:
+                shuffleCount = 6;
+                break;
+            case 3:
+                shuffleCount = 9;
+                break;
+            default:
+                break;
+        }
+
+        mPack = getShuffledPack(shuffleCount);
 
         int[] player1Set = new int[8];
         int[] player2Set = new int[8];
         int[] player3Set = new int[8];
         int[] player4Set = new int[8];
+
+        int[] set1 = new int[8];
+        int[] set2 = new int[8];
+        int[] set3 = new int[8];
+        int[] set4 = new int[8];
+
+        for (int i = 0; i < 4; i++) {
+            set1[i] = mPack[i];
+            set1[i+4] = mPack[i+16];
+
+            set2[i] = mPack[i+4];
+            set2[i+4] = mPack[i+16+4];
+
+            set3[i] = mPack[i+4+4];
+            set3[i+4] = mPack[i+16+4+4];
+
+            set4[i] = mPack[i+4+4+4];
+            set4[i+4] = mPack[i+16+4+4+4];
+        }
+
+        switch (myPlayerNo) {
+            case 1:
+                player1Set = set4;
+                player2Set = set1;
+                player3Set = set2;
+                player4Set = set3;
+                break;
+            case 2:
+                player1Set = set3;
+                player2Set = set4;
+                player3Set = set1;
+                player4Set = set2;
+                break;
+            case 3:
+                player1Set = set2;
+                player2Set = set3;
+                player3Set = set4;
+                player4Set = set1;
+                break;
+            case 4:
+                player1Set = set1;
+                player2Set = set2;
+                player3Set = set3;
+                player4Set = set4;
+                break;
+            default:
+                break;
+        }
 
         if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.playerDidDistributeCards(player1Set, player2Set, player3Set, player4Set);
 
@@ -196,8 +268,31 @@ public class OmiGameView extends LinearLayout {
         int suitNo4 = getSuitOfCard(myCards[3]);
 
         if (suitNo1 != suitNo2 && suitNo1 != suitNo3 && suitNo1 != suitNo4 && suitNo2 != suitNo3 && suitNo2 != suitNo4 && suitNo3 != suitNo4) {
-
+            AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+            builder.setTitle("Do you need select trumps from next card?");
+            builder.setMessage("Since your cards have four different suits you can choose suit of the next card as trumps.");
+            builder.setNegativeButton("Ok", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    mAlertDialog.dismiss();
+                    showNextHandFirstCard();
+                }
+            });
+            builder.setPositiveButton("No", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    mAlertDialog.dismiss();
+                }
+            });
+            mAlertDialog = builder.create();
+            mAlertDialog.setCanceledOnTouchOutside(false);
+            mAlertDialog.setCancelable(false);
+            mAlertDialog.show();
         }
+    }
+
+    private void showNextHandFirstCard() {
+        //TODO
     }
 
     public void playerSelectingTrumps(OmiPlayer omiPlayer) {
@@ -308,6 +403,8 @@ public class OmiGameView extends LinearLayout {
         if (mOmiRound.didAllPlayersPlay()) {
             int winner = mOmiRound.getWinner();
             mOmiHand.addWinToPlayer(winner);
+            mOmiHand.addLastRoundToPack();
+            updatePack();
             mOmiGameStat.addWinToPlayer(winner);
 
             if (mOmiHand.isHandOver()) {
@@ -357,10 +454,99 @@ public class OmiGameView extends LinearLayout {
         mOmiGameStat = new OmiGameStat();
         View inflater = LayoutInflater.from(context).inflate(R.layout.view_game, this, true);
 
-        playerName1  = (TextView)inflater.findViewById(R.id.txtPlayerName1);
-        playerName2 = (TextView)inflater.findViewById(R.id.txtPlayerName2);
-        playerName3 = (TextView)inflater.findViewById(R.id.txtPlayerName3);
-        playerName4 = (TextView)inflater.findViewById(R.id.txtPlayerName4);
+//        playerName1  = (TextView)inflater.findViewById(R.id.txtPlayerName1);
+//        playerName2 = (TextView)inflater.findViewById(R.id.txtPlayerName2);
+//        playerName3 = (TextView)inflater.findViewById(R.id.txtPlayerName3);
+//        playerName4 = (TextView)inflater.findViewById(R.id.txtPlayerName4);
+    }
+
+    private void initPack() {
+        mPack = new int[32];
+        int sp = 107;
+        int he = 207;
+        int cl = 307;
+        int di = 407;
+
+        int j = 8;
+        int k = 16;
+        int l = 24;
+        for (int i = 0; i < 8; i++) {
+            mPack[i] = sp;
+            mPack[j] = he;
+            mPack[k] = cl;
+            mPack[l] = di;
+
+            j++; k++; l++;
+            sp++; he++; cl++; di++;
+        }
+
+        mPack = getShuffledPack(1);
+    }
+
+    private void updatePack() {
+
+        if (mPack == null) mPack = new int[32];
+
+        int roundNo = mOmiRound.getRoundNo();
+        int startIndex = (roundNo - 1) * 4;
+        switch (mOmiRound.getStartedPlayerNo()) {
+            case 1:
+                mPack[startIndex] = mOmiRound.getPlayer1Card();
+                mPack[startIndex+1] = mOmiRound.getPlayer2Card();
+                mPack[startIndex+2] = mOmiRound.getPlayer3Card();
+                mPack[startIndex+3] = mOmiRound.getPlayer4Card();
+                break;
+            case 2:
+                mPack[startIndex] = mOmiRound.getPlayer2Card();
+                mPack[startIndex+1] = mOmiRound.getPlayer3Card();
+                mPack[startIndex+2] = mOmiRound.getPlayer4Card();
+                mPack[startIndex+3] = mOmiRound.getPlayer1Card();
+                break;
+            case 3:
+                mPack[startIndex] = mOmiRound.getPlayer3Card();
+                mPack[startIndex+1] = mOmiRound.getPlayer4Card();
+                mPack[startIndex+2] = mOmiRound.getPlayer1Card();
+                mPack[startIndex+3] = mOmiRound.getPlayer2Card();
+                break;
+            case 4:
+                mPack[startIndex] = mOmiRound.getPlayer4Card();
+                mPack[startIndex+1] = mOmiRound.getPlayer1Card();
+                mPack[startIndex+2] = mOmiRound.getPlayer2Card();
+                mPack[startIndex+3] = mOmiRound.getPlayer3Card();
+                break;
+            default:
+                break;
+        }
+    }
+
+    private int[] getShuffledPack(int shuffleCount) {
+        int[] newPack = new int[32];
+
+        Random r = new Random();
+        for (int i = 0; i < shuffleCount; i++) {
+            int rand = r.nextInt(7) + 5;
+
+            int range1 = (32/2) - (rand/2);
+            int range2 = range1 + rand;
+
+            int pi = 0;
+            for (int j = range1; j < range2; j++) {
+                newPack[pi] = mPack[j];
+                pi++;
+            }
+
+            for (int j = range2; j < 32; j++) {
+                newPack[pi] = mPack[j];
+                pi++;
+            }
+
+            for (int j = 0; j < range1; j++) {
+                newPack[pi] = mPack[j];
+                pi++;
+            }
+        }
+
+        return newPack;
     }
 
     private String getPlayerNameOf(int playerNo) {

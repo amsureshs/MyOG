@@ -36,6 +36,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class OmiGameActivity extends Activity implements BTConnectionListener , OmiGameView.OmiGameViewListener{
 
@@ -130,35 +131,41 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
         mPopupLayout.setVisibility(View.GONE);
 
         mOmiGameView = new OmiGameView(OmiGameActivity.this, this);
+
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT);
+        mOmiGameView.setLayoutParams(lp);
+
         mGameLayout.addView(mOmiGameView);
 
-        Intent intent = getIntent();
-        mIsHostGame = intent.getBooleanExtra(Constants.ExtraKey.EXTRA_KEY_HOST_OR_JOIN, false);
-
-        mBTAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (mBTAdapter == null) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Sorry!");
-            builder.setMessage("Your device does not support bluetooth.");
-            builder.setNegativeButton("Ok", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    mAlertDialog.dismiss();
-                    noBluetoothAndEndGame();
-                }
-            });
-            mAlertDialog = builder.create();
-            mAlertDialog.setCanceledOnTouchOutside(false);
-            mAlertDialog.setCancelable(false);
-            mAlertDialog.show();
-        }else {
-            if (!mBTAdapter.isEnabled()) {
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-            }else {
-                configureGame();
-            }
-        }
+//        Intent intent = getIntent();
+//        mIsHostGame = intent.getBooleanExtra(Constants.ExtraKey.EXTRA_KEY_HOST_OR_JOIN, false);
+//
+//        mBTAdapter = BluetoothAdapter.getDefaultAdapter();
+//        if (mBTAdapter == null) {
+//            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//            builder.setTitle("Sorry!");
+//            builder.setMessage("Your device does not support bluetooth.");
+//            builder.setNegativeButton("Ok", new DialogInterface.OnClickListener() {
+//                @Override
+//                public void onClick(DialogInterface dialog, int which) {
+//                    mAlertDialog.dismiss();
+//                    noBluetoothAndEndGame();
+//                }
+//            });
+//            mAlertDialog = builder.create();
+//            mAlertDialog.setCanceledOnTouchOutside(false);
+//            mAlertDialog.setCancelable(false);
+//            mAlertDialog.show();
+//        }else {
+//            if (!mBTAdapter.isEnabled()) {
+//                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+//                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+//            }else {
+//                configureGame();
+//            }
+//        }
     }
 
     @Override
@@ -360,6 +367,9 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
         //nameET.setTextColor(getResources().getColor(R.color.black));
         nameET.setHint("Nickname");
         nameET.setLayoutParams(lp);
+        nameET.setSingleLine(true);
+        nameET.setLines(1);
+        nameET.setMaxLines(1);
 
         textWatcher = new TextWatcher() {
 
@@ -397,13 +407,17 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
         builder.setNegativeButton("Ok", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-
                 String name = nameET.getText().toString();
                 if (name != null && name.length() > 0) {
-                    SettingsManager.addSetting(Constants.UserKey.NICK_NAME, name, getApplicationContext());
-                    mNickNameDialog.dismiss();
-                    configureGame();
+
+                }else {
+                    Random r = new Random();
+                    int rand = r.nextInt(8) + 1;
+                    name = "Player" + rand;
                 }
+
+                SettingsManager.addSetting(Constants.UserKey.NICK_NAME, name, getApplicationContext());
+                configureGame();
             }
         });
         mNickNameDialog = builder.create();

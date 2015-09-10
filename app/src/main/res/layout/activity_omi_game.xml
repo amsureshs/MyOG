@@ -10,6 +10,7 @@
         android:orientation="vertical"
         android:gravity="center_vertical"
         android:background="@color/blue_theme">
+
     </LinearLayout>
 
     <LinearLayout
@@ -21,6 +22,5 @@
         android:background="@color/clear_color"
         android:visibility="gone">
     </LinearLayout>
-
 
 </FrameLayout>

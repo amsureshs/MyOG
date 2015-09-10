@@ -22,4 +22,6 @@
     <string name="game_player_name_3">Player3</string>
     <string name="game_player_name_4">Player4</string>
 
+    <string name="game_player_won">Won 0</string>
+
 </resources>

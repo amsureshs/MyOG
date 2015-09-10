@@ -14,6 +14,7 @@ public class OmiHand {
     private int player2Wins = 0;
     private int player3Wins = 0;
     private int player4Wins = 0;
+    private int[] pack = null;
 
     /*
 
@@ -101,6 +102,45 @@ public class OmiHand {
 
     public int getPlayer4Wins() {
         return player4Wins;
+    }
+
+    public int[] getPack() {
+        return pack;
+    }
+
+    public void addLastRoundToPack() {
+        if (pack == null) pack = new int[32];
+
+        int roundNo = currentRound.getRoundNo();
+        int startIndex = (roundNo - 1) * 4;
+        switch (currentRound.getStartedPlayerNo()) {
+            case 1:
+                pack[startIndex] = currentRound.getPlayer1Card();
+                pack[startIndex+1] = currentRound.getPlayer2Card();
+                pack[startIndex+2] = currentRound.getPlayer3Card();
+                pack[startIndex+3] = currentRound.getPlayer4Card();
+                break;
+            case 2:
+                pack[startIndex] = currentRound.getPlayer2Card();
+                pack[startIndex+1] = currentRound.getPlayer3Card();
+                pack[startIndex+2] = currentRound.getPlayer4Card();
+                pack[startIndex+3] = currentRound.getPlayer1Card();
+                break;
+            case 3:
+                pack[startIndex] = currentRound.getPlayer3Card();
+                pack[startIndex+1] = currentRound.getPlayer4Card();
+                pack[startIndex+2] = currentRound.getPlayer1Card();
+                pack[startIndex+3] = currentRound.getPlayer2Card();
+                break;
+            case 4:
+                pack[startIndex] = currentRound.getPlayer4Card();
+                pack[startIndex+1] = currentRound.getPlayer1Card();
+                pack[startIndex+2] = currentRound.getPlayer2Card();
+                pack[startIndex+3] = currentRound.getPlayer3Card();
+                break;
+            default:
+                break;
+        }
     }
 
     public void addWinToPlayer(int playerNo) {
