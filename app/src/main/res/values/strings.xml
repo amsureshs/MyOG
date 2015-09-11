@@ -24,4 +24,7 @@
 
     <string name="game_player_won">Won 0</string>
 
+    <string name="omi_card_name">A</string>
+
+
 </resources>

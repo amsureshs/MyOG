@@ -48,14 +48,14 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <Button
+            <ImageButton
                 android:id="@+id/btnSettings"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:visibility="gone"/>
 
-            <Button
-                android:id="@+id/btnLastRound"
+            <ImageButton
+                android:id="@+id/btnLastHand"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:visibility="gone"/>
@@ -321,18 +321,17 @@
 
         </LinearLayout>
 
-        <LinearLayout
+        <RelativeLayout
             android:id="@+id/cardsLayout"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
-            android:background="@color/red"
-            android:gravity="center"
+            android:background="@color/clear_color"
             android:orientation="horizontal">
 
-        </LinearLayout>
+        </RelativeLayout>
 
         <TextView
             android:id="@+id/txtPlayerName1"
@@ -381,6 +380,36 @@
         <EditText
             android:layout_width="match_parent"
             android:layout_height="44dp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/shuffleLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageButton
+            android:id="@+id/btnShuffle1"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_margin="20dp"
+            android:background="@color/blue_light"/>
+
+        <ImageButton
+            android:id="@+id/btnShuffle2"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_margin="20dp"
+            android:background="@color/blue_light"/>
+
+        <ImageButton
+            android:id="@+id/btnShuffle3"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_margin="20dp"
+            android:background="@color/blue_light"/>
 
     </LinearLayout>
 

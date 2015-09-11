@@ -1527,18 +1527,6 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
     @Override
     public void firstCardSetAppear() {
 
-        int trumpSelPlayerNo = mOmiGameView.mOmiHand.getShuffledPlayerNo() + 1;
-        if (mOmiGameView.mOmiHand.getShuffledPlayerNo() == 4) {
-            trumpSelPlayerNo = 1;
-        }
-
-        if (trumpSelPlayerNo == mOmiGameView.myPlayerNo) {
-            mOmiGameView.cmdSelectTrumps();
-        }else {
-            OmiPlayer omiPlayer = new OmiPlayer();
-            omiPlayer.setPlayerNo(trumpSelPlayerNo);
-            mOmiGameView.playerSelectingTrumps(omiPlayer);
-        }
     }
 
     @Override
