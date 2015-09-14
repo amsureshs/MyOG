@@ -4,16 +4,21 @@ import android.animation.Animator;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.Size;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
 import android.view.animation.DecelerateInterpolator;
+import android.view.animation.ScaleAnimation;
 import android.view.animation.TranslateAnimation;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -32,6 +37,7 @@ import com.ssgames.com.omiplus.util.Constants;
 
 import org.json.JSONObject;
 
+import java.util.Arrays;
 import java.util.Random;
 
 
@@ -85,10 +91,16 @@ public class OmiGameView extends LinearLayout {
     private RelativeLayout cardsLayout = null;
     private LinearLayout chatLayout = null;
     private LinearLayout shuffleLayout = null;
+    private LinearLayout nextCardTrumps = null;
 
     private ImageButton btnShuffle1 = null;
     private ImageButton btnShuffle2 = null;
     private ImageButton btnShuffle3 = null;
+
+    private LinearLayout trumpsShowLayout = null;
+    private ImageView imgTrumpsView = null;
+
+    private LinearLayout animationLayout = null;
 
     private AlertDialog mAlertDialog = null;
 
@@ -205,33 +217,29 @@ public class OmiGameView extends LinearLayout {
 
     private void playerShuffledThePack(int option) {
 
+        final float xp = shuffleLayout.getX();
+        final float ysp = shuffleLayout.getY();
+        final float yep = ysp + shuffleLayout.getHeight();
 
-        shuffleLayout.setVisibility(View.GONE);
-        //TODO show animation
+        TranslateAnimation tAnimation = new TranslateAnimation(xp,xp,ysp,yep);
+        tAnimation.setDuration(600);
+        tAnimation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
 
-//        final float xp = shuffleLayout.getX();
-//        final float ysp = shuffleLayout.getY();
-//        final float yep = ysp + shuffleLayout.getHeight();
-//
-//        TranslateAnimation tAnimation = new TranslateAnimation(xp,xp,ysp,yep);
-//        tAnimation.setDuration(600);
-//        tAnimation.setAnimationListener(new Animation.AnimationListener() {
-//            @Override
-//            public void onAnimationStart(Animation animation) {
-//
-//            }
-//
-//            @Override
-//            public void onAnimationEnd(Animation animation) {
-//                shuffleLayout.setVisibility(View.GONE);
-//            }
-//
-//            @Override
-//            public void onAnimationRepeat(Animation animation) {
-//
-//            }
-//        });
-//        shuffleLayout.startAnimation(tAnimation);
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                shuffleLayout.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        shuffleLayout.startAnimation(tAnimation);
 
 
         int shuffleCount = 0;
@@ -250,6 +258,10 @@ public class OmiGameView extends LinearLayout {
         }
 
         mPack = getShuffledPack(shuffleCount);
+
+        for (int i = 0; i < 32; i++) {
+            Log.v(TAG, "Card " + mPack[i]);
+        }
 
         int[] player1Set = new int[8];
         int[] player2Set = new int[8];
@@ -339,6 +351,7 @@ public class OmiGameView extends LinearLayout {
 
         for (int i = 0; i < cardsLayout.getChildCount(); i++) {
             View v = cardsLayout.getChildAt(i);
+            v.setVisibility(View.GONE);
             cardsLayout.removeView(v);
         }
 
@@ -358,7 +371,7 @@ public class OmiGameView extends LinearLayout {
             omiCard.setCardNo(myCards[i]);
             cardsLayout.addView(omiCard);
 
-            final float xp = cardW * (3 - i);
+            final float xp = cardW * i;
 
             final boolean animEnd = (i == 3);
 
@@ -387,8 +400,6 @@ public class OmiGameView extends LinearLayout {
             });
             omiCard.startAnimation(tAnimation);
         }
-
-
     }
 
     private void firstSetShowAnimationEnd() {
@@ -397,6 +408,7 @@ public class OmiGameView extends LinearLayout {
             if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.firstCardSetAppear();
         }
 
+        //TODO TEST
         cmdSelectTrumps();
 
 //        int trumpSelPlayerNo = mOmiHand.getShuffledPlayerNo() + 1;
@@ -416,7 +428,45 @@ public class OmiGameView extends LinearLayout {
     public void cmdSelectTrumps() {
         iDidTheAction = true;
         trumpsSelectLayout.setVisibility(View.VISIBLE);
-        //TODO show select trumps screen
+
+        CharSequence text = "Select trumps.";
+        int duration = Toast.LENGTH_SHORT;
+        Toast toast = Toast.makeText(mContext, text, duration);
+        toast.setGravity(Gravity.CENTER, 0, 0);
+        toast.show();
+
+        trumpsSelectLayout.post(new Runnable() {
+            @Override
+            public void run() {
+                showTrumpsSelectView();
+            }
+        });
+    }
+
+    private void showTrumpsSelectView() {
+        int layerW = btnTrumps1.getWidth();
+        int layerH = btnTrumps1.getHeight();
+
+        int cardH = getHeightOfACard(layerH, layerW);
+        int cardW = (int)(cardH / cardRatio);
+
+        Bitmap spaidsMap = BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.spaids);
+        Bitmap reSpaidsMap = Bitmap.createScaledBitmap(spaidsMap, cardW, cardH, false);
+        btnTrumps1.setImageBitmap(reSpaidsMap);
+
+        Bitmap heartsMap = BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.hearts);
+        Bitmap reHeartsMap = Bitmap.createScaledBitmap(heartsMap, cardW, cardH, false);
+        btnTrumps2.setImageBitmap(reHeartsMap);
+
+        Bitmap clubsMap = BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.clubs);
+        Bitmap reClubsMap = Bitmap.createScaledBitmap(clubsMap, cardW, cardH, false);
+        btnTrumps4.setImageBitmap(reClubsMap);
+
+        Bitmap diamMap = BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.diamonds);
+        Bitmap reDiamMap = Bitmap.createScaledBitmap(diamMap, cardW, cardH, false);
+        btnTrumps3.setImageBitmap(reDiamMap);
+
+        showFourSuitTrumpsSelectMessage();
     }
 
     private void showFourSuitTrumpsSelectMessage() {
@@ -450,18 +500,60 @@ public class OmiGameView extends LinearLayout {
     }
 
     private void showNextHandFirstCard() {
-        //TODO
+        trumpsSelectLayout.setVisibility(View.GONE);
+        nextCardTrumps.setVisibility(View.VISIBLE);
+
+        nextCardTrumps.post(new Runnable() {
+            @Override
+            public void run() {
+
+                int cardW = nextCardTrumps.getWidth();
+                int cardH = nextCardTrumps.getHeight();
+
+                cardH = getHeightOfACard(cardW, cardH);
+                cardW = (int) (cardH / cardRatio);
+
+                final OmiCard omiCard = new OmiCard(mContext, cardW, cardH);
+                omiCard.setCardNo(myCards[4]);
+                nextCardTrumps.addView(omiCard);
+
+                AlphaAnimation alphaAnimation = new AlphaAnimation(1.0f, 0.3f);
+                alphaAnimation.setDuration(600);
+                alphaAnimation.setAnimationListener(new Animation.AnimationListener() {
+                    @Override
+                    public void onAnimationStart(Animation animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animation animation) {
+                        nextCardTrumps.removeView(omiCard);
+                        nextCardTrumps.setVisibility(View.GONE);
+                        playerSelectedTrumps(getSuitOfCard(myCards[4]), 1);
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animation animation) {
+
+                    }
+                });
+                omiCard.startAnimation(alphaAnimation);
+            }
+        });
     }
 
     public void playerSelectingTrumps(OmiPlayer omiPlayer) {
-        //TODO show selecting
+        CharSequence text = getPlayerNameOf(omiPlayer.getPlayerNo()) + " is selecting trumps.";
+        int duration = Toast.LENGTH_LONG;
+        Toast toast = Toast.makeText(mContext, text, duration);
+        toast.show();
     }
 
     public void playerSelectedTrumps(int suitNo, int option) {
 
-        mOmiHand.setTrumps(suitNo);
+        //TODO TEST
+        //mOmiHand.setTrumps(suitNo);
 
-        //TODO show animation
         if (iDidTheAction) {
             if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.playerDidSelectTrumps(suitNo, option);
         }else {
@@ -469,24 +561,164 @@ public class OmiGameView extends LinearLayout {
                 showTrumpsSelectedFromSecondHand();
             }
         }
+
+        animationLayout.setVisibility(View.VISIBLE);
+
+        final int suit = suitNo;
+        trumpsShowLayout.setVisibility(View.VISIBLE);
+        trumpsShowLayout.post(new Runnable() {
+            @Override
+            public void run() {
+                animateTrumpsSelection(suit);
+            }
+        });
+    }
+
+    private void animateTrumpsSelection(int suitNo) {
+        int lW = trumpsShowLayout.getWidth();
+        int lH = trumpsShowLayout.getHeight();
+
+        int w = lW/2;
+        if (lW > lH) {
+            w = lH/2;
+        }
+
+        int rId = R.mipmap.spaids;
+        if (suitNo == 1) {
+            rId = R.mipmap.spaids;
+        }else if (suitNo == 2) {
+            rId = R.mipmap.hearts;
+        }else if (suitNo == 3) {
+            rId = R.mipmap.clubs;
+        }else if (suitNo == 4) {
+            rId = R.mipmap.diamonds;
+        }
+
+        imgTrumpsView.setVisibility(View.INVISIBLE);
+        Bitmap trumpsMap = BitmapFactory.decodeResource(mContext.getResources(), rId);
+        Bitmap reTrumpsMap = Bitmap.createScaledBitmap(trumpsMap, w, w, false);
+        imgTrumpsView.setImageBitmap(reTrumpsMap);
+
+        final ImageView imgView = new ImageView(mContext);
+        imgView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        imgView.setImageBitmap(reTrumpsMap);
+        animationLayout.addView(imgView);
+
+        ScaleAnimation scaleAnimation = new ScaleAnimation(1, 5.5f, 1, 5.5f, w/2, w/2);
+        scaleAnimation.setDuration(800);
+
+        AlphaAnimation alphaAnimation = new AlphaAnimation(1.0f, 0.6f);
+        alphaAnimation.setDuration(800);
+
+        AnimationSet animationSet = new AnimationSet(true);
+        animationSet.addAnimation(scaleAnimation);
+        animationSet.addAnimation(alphaAnimation);
+        animationSet.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                animationLayout.removeView(imgView);
+                animationLayout.setVisibility(View.GONE);
+                imgTrumpsView.setVisibility(View.VISIBLE);
+                trumpsSelectAnimationEnd();
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        imgView.startAnimation(animationSet);
     }
 
     public void showTrumpsSelectedFromSecondHand() {
-        //TODO
+        CharSequence text = "Trumps was selected from second hand.";
+        int duration = Toast.LENGTH_LONG;
+        Toast toast = Toast.makeText(mContext, text, duration);
+        toast.show();
     }
 
     private void trumpsSelectAnimationEnd() {
+        trumpsSelectLayout.setVisibility(View.GONE);
+        cardPlayedLayout.setVisibility(View.VISIBLE);
         showReceivedCardsSecondSet();
     }
 
     private void showReceivedCardsSecondSet() {
         //TODO show first set
         //TODO show sort button
+
+        for (int i = 0; i < cardsLayout.getChildCount(); i++) {
+            View v = cardsLayout.getChildAt(i);
+            v.setVisibility(View.GONE);
+            cardsLayout.removeView(v);
+        }
+
+        int layerW = cardsLayout.getWidth();
+        int layerH = cardsLayout.getHeight();
+
+        int cardW = layerW/4;
+        int cardH = layerH;
+
+        cardH = getHeightOfACard(cardW, cardH);
+        cardW = (int)(cardH / cardRatio);
+
+        float cardSp = (layerW - cardW)/7.0f;
+
+        calcCardH = cardH;
+        final float yp = (layerH - cardH)/2;
+        for (int i = 0; i < 8; i++) {
+            final OmiCard omiCard = new OmiCard(mContext, cardW, cardH);
+            omiCard.setOmiCardListener(getOmiCardListener());
+            omiCard.setCardNo(myCards[i]);
+            cardsLayout.addView(omiCard);
+
+            final float xp = cardSp * i;
+
+            final boolean animEnd = (i == 7);
+
+            TranslateAnimation tAnimation = new TranslateAnimation(0,xp,yp,yp);
+            tAnimation.setDuration(1000);
+            tAnimation.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    omiCard.setX(xp);
+                    omiCard.setY(yp);
+
+                    if (animEnd) {
+                        secondSetShowAnimationEnd();
+                    }
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+
+                }
+            });
+            omiCard.startAnimation(tAnimation);
+        }
+    }
+
+    private OmiCard.OmiCardListener getOmiCardListener() {
+        return new OmiCard.OmiCardListener() {
+            @Override
+            public void cardSelected(OmiCard card) {
+                //TODO
+            }
+        };
     }
 
     private void secondSetShowAnimationEnd() {
-
-        showSortButton(true);
+        btnSortHand.setVisibility(View.VISIBLE);
 
         if (iDidTheAction) {
             enablePlayCards(true, 0);
@@ -495,8 +727,57 @@ public class OmiGameView extends LinearLayout {
         }
     }
 
-    private void showSortButton(boolean show) {
-        //TODO
+    private void sortButtonTapped() {
+        Arrays.sort(myCards);
+
+        for (int i = 0; i < cardsLayout.getChildCount(); i++) {
+            View v = cardsLayout.getChildAt(i);
+            v.setVisibility(View.GONE);
+            cardsLayout.removeView(v);
+        }
+
+        int layerW = cardsLayout.getWidth();
+        int layerH = cardsLayout.getHeight();
+
+        int cardW = layerW/4;
+        int cardH = layerH;
+
+        cardH = getHeightOfACard(cardW, cardH);
+        cardW = (int)(cardH / cardRatio);
+
+        float cardSp = (layerW - cardW)/7.0f;
+
+        calcCardH = cardH;
+        final float yp = (layerH - cardH)/2;
+        for (int i = 0; i < 8; i++) {
+            final OmiCard omiCard = new OmiCard(mContext, cardW, cardH);
+            omiCard.setOmiCardListener(getOmiCardListener());
+            omiCard.setCardNo(myCards[i]);
+            cardsLayout.addView(omiCard);
+
+            final float xp = cardSp * i;
+
+            TranslateAnimation tAnimation = new TranslateAnimation(0,xp,yp,yp);
+            tAnimation.setDuration(1000);
+            tAnimation.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    omiCard.setX(xp);
+                    omiCard.setY(yp);
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+
+                }
+            });
+            omiCard.startAnimation(tAnimation);
+        }
     }
 
     private void enablePlayCards(boolean enable, int suitNo) {
@@ -609,7 +890,7 @@ public class OmiGameView extends LinearLayout {
     private void init(Context context, OmiGameViewListener omiGameViewListener) {
         mContext = context;
         mOMOmiGameViewListener = omiGameViewListener;
-        //TODO
+        //TODO TEST Game
         mOMOmiGameViewListener = null;
         myPlayerNo = 1;
 
@@ -625,6 +906,9 @@ public class OmiGameView extends LinearLayout {
         txtWon2  = (TextView)inflater.findViewById(R.id.txtWon2);
         txtWon3  = (TextView)inflater.findViewById(R.id.txtWon3);
         txtWon4  = (TextView)inflater.findViewById(R.id.txtWon4);
+
+        trumpsShowLayout = (LinearLayout)inflater.findViewById(R.id.trumpsShowLayout);
+        imgTrumpsView = (ImageView)inflater.findViewById(R.id.imgTrumpsView);
 
         btnSettings = (ImageButton)inflater.findViewById(R.id.btnSettings);
         btnSettings.setOnClickListener(new OnClickListener() {
@@ -645,11 +929,17 @@ public class OmiGameView extends LinearLayout {
         trumpsSelectLayout = (LinearLayout)inflater.findViewById(R.id.trumpsSelectLayout);
         trumpsSelectLayout.setVisibility(View.GONE);
 
+        animationLayout = (LinearLayout)inflater.findViewById(R.id.animationLayout);
+        animationLayout.setVisibility(View.GONE);
+
+        nextCardTrumps = (LinearLayout)inflater.findViewById(R.id.nextCardTrumps);
+        nextCardTrumps.setVisibility(View.GONE);
+
         btnTrumps1 = (ImageButton)inflater.findViewById(R.id.btnTrumps1);
         btnTrumps1.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO
+                playerSelectedTrumps(1, 0);
             }
         });
 
@@ -657,7 +947,7 @@ public class OmiGameView extends LinearLayout {
         btnTrumps2.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO
+                playerSelectedTrumps(2, 0);
             }
         });
 
@@ -665,7 +955,7 @@ public class OmiGameView extends LinearLayout {
         btnTrumps3.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO
+                playerSelectedTrumps(4, 0);
             }
         });
 
@@ -673,7 +963,7 @@ public class OmiGameView extends LinearLayout {
         btnTrumps4.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO
+                playerSelectedTrumps(3, 0);
             }
         });
 
@@ -689,7 +979,7 @@ public class OmiGameView extends LinearLayout {
         btnSortHand.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                cmdShuffleThePack();
+                sortButtonTapped();
             }
         });
         //btnSortHand.setVisibility(View.INVISIBLE);
@@ -698,7 +988,8 @@ public class OmiGameView extends LinearLayout {
         btnShowChat.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO
+                //TODO TEST
+                cmdShuffleThePack();
             }
         });
 
@@ -756,7 +1047,7 @@ public class OmiGameView extends LinearLayout {
             sp++; he++; cl++; di++;
         }
 
-        mPack = getShuffledPack(3);
+        mPack = getShuffledPack();
     }
 
     private void updatePack() {
@@ -796,13 +1087,17 @@ public class OmiGameView extends LinearLayout {
     }
 
     private int[] getShuffledPack(int shuffleCount) {
-        int[] newPack = new int[32];
 
         Random r = new Random();
         for (int i = 0; i < shuffleCount; i++) {
-            int rand = r.nextInt(7) + 5;
 
-            int range1 = (32/2) - (rand/2);
+            int[] newPack = new int[32];
+
+            int rand = r.nextInt(3) + 6;
+
+            int randFirst = r.nextInt(3) + 12;
+
+            int range1 = randFirst;
             int range2 = range1 + rand;
 
             int pi = 0;
@@ -820,9 +1115,26 @@ public class OmiGameView extends LinearLayout {
                 newPack[pi] = mPack[j];
                 pi++;
             }
+
+            mPack = newPack;
         }
 
-        return newPack;
+        return mPack;
+    }
+
+    private int[] getShuffledPack() {
+
+        int[] newPack = new int[32];
+
+        for (int i = 0; i < 8; i++) {
+            newPack[i] = mPack[i*4];
+            newPack[i+8] = mPack[i*4 + 1];
+            newPack[i+16] = mPack[i*4 + 2];
+            newPack[i+24] = mPack[i*4 + 3];
+        }
+
+        mPack = newPack;
+        return mPack;
     }
 
     private String getPlayerNameOf(int playerNo) {
