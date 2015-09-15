@@ -963,7 +963,7 @@ public class OmiGameView extends LinearLayout {
         omiCard.setX(lCC1X);
         omiCard.setY(lCC1Y);
 
-        TranslateAnimation tAnimation = new TranslateAnimation(lCC1X,lCCX,lCC1Y,lCCY);
+        TranslateAnimation tAnimation = new TranslateAnimation(lCC1X,lCC1X,lCC1Y,lCCY-lCC1Y);
         tAnimation.setDuration(1000);
         tAnimation.setAnimationListener(new Animation.AnimationListener() {
             @Override
@@ -973,7 +973,9 @@ public class OmiGameView extends LinearLayout {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                //omiCard.setVisibility(View.INVISIBLE);
+                omiCard.setVisibility(View.GONE);
+                animationLayout.removeView(omiCard);
+                animationLayout.setVisibility(View.GONE);
             }
 
             @Override
