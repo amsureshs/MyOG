@@ -2,6 +2,7 @@ package com.ssgames.com.omiplus.views;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageButton;
@@ -20,7 +21,7 @@ public class OmiCard extends LinearLayout{
     private static final String TAG = OmiCard.class.getSimpleName();
 
     public interface OmiCardListener {
-        public void cardSelected(OmiCard card);
+        public void cardSelected(OmiCard card, int option);
     }
 
     private OmiCardListener omiCardListener = null;
@@ -30,6 +31,7 @@ public class OmiCard extends LinearLayout{
     private TextView txtName = null;
 
     private int cardNo;
+    private boolean enable = false;
 
     public OmiCard(Context context, int width, int height) {
         super(context);
@@ -53,7 +55,16 @@ public class OmiCard extends LinearLayout{
     }
 
     public void enableCard(boolean enable) {
-        btnCard.setEnabled(enable);
+        this.enable = enable;
+        if (enable) {
+            this.setAlpha(1.0f);
+        }else {
+            this.setAlpha(0.6f);
+        }
+    }
+
+    public int getSuit() {
+        return getSuitOfCard(cardNo);
     }
 
     public int getCardNo() {
@@ -89,13 +100,6 @@ public class OmiCard extends LinearLayout{
         }
     }
 
-    public void setCardSize(int width, int height) {
-        LayoutParams params = (LayoutParams) this.getLayoutParams();
-        params.width = width;
-        params.height = height;
-        this.setLayoutParams(params);
-    }
-
     private void init(Context context, int width, int height) {
         mContext = context;
 
@@ -105,11 +109,23 @@ public class OmiCard extends LinearLayout{
         inflater.setLayoutParams(lp);
 
         btnCard = (ImageButton)inflater.findViewById(R.id.btnCard);
-        btnCard.setEnabled(false);
         btnCard.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                cardSelected();
+                if (enable) {
+                    cardSelected(0);
+                }
+                enable = false;
+            }
+        });
+        btnCard.setOnLongClickListener(new OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if (enable) {
+                    cardSelected(1);
+                }
+                enable = false;
+                return true;
             }
         });
 
@@ -117,8 +133,8 @@ public class OmiCard extends LinearLayout{
         txtName = (TextView)inflater.findViewById(R.id.txtName);
     }
 
-    private void cardSelected() {
-        if(omiCardListener != null) omiCardListener.cardSelected(this);
+    private void cardSelected(int option) {
+        if(omiCardListener != null) omiCardListener.cardSelected(this, option);
     }
 
     private String getCardName(int cardNo) {
