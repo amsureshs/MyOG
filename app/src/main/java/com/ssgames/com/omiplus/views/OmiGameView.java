@@ -355,11 +355,18 @@ public class OmiGameView extends LinearLayout {
 
     private void showFirstHandInCardsLayout() {
 
+        ArrayList<View> views = new ArrayList<>();
+
         for (int i = 0; i < cardsLayout.getChildCount(); i++) {
             View v = cardsLayout.getChildAt(i);
             v.setVisibility(View.GONE);
+            views.add(v);
+        }
+
+        for (View v: views) {
             cardsLayout.removeView(v);
         }
+        views.clear();
 
         int layerW = cardsLayout.getWidth();
         int layerH = cardsLayout.getHeight();
@@ -383,6 +390,8 @@ public class OmiGameView extends LinearLayout {
 
             TranslateAnimation tAnimation = new TranslateAnimation(0,xp,yp,yp);
             tAnimation.setDuration(1000);
+            tAnimation.setFillBefore(false);
+            tAnimation.setFillEnabled(true);
             tAnimation.setAnimationListener(new Animation.AnimationListener() {
                 @Override
                 public void onAnimationStart(Animation animation) {
@@ -525,6 +534,8 @@ public class OmiGameView extends LinearLayout {
 
                 AlphaAnimation alphaAnimation = new AlphaAnimation(1.0f, 0.3f);
                 alphaAnimation.setDuration(600);
+                alphaAnimation.setFillBefore(false);
+                alphaAnimation.setFillEnabled(true);
                 alphaAnimation.setAnimationListener(new Animation.AnimationListener() {
                     @Override
                     public void onAnimationStart(Animation animation) {
@@ -612,9 +623,13 @@ public class OmiGameView extends LinearLayout {
 
         ScaleAnimation scaleAnimation = new ScaleAnimation(1, 5.5f, 1, 5.5f, w/2, w/2);
         scaleAnimation.setDuration(800);
+        scaleAnimation.setFillBefore(false);
+        scaleAnimation.setFillEnabled(true);
 
         AlphaAnimation alphaAnimation = new AlphaAnimation(1.0f, 0.6f);
         alphaAnimation.setDuration(800);
+        alphaAnimation.setFillBefore(false);
+        alphaAnimation.setFillEnabled(true);
 
         AnimationSet animationSet = new AnimationSet(true);
         animationSet.addAnimation(scaleAnimation);
@@ -656,16 +671,32 @@ public class OmiGameView extends LinearLayout {
 
     private void showReceivedCardsSecondSet() {
 
+        if (omiCards == null) {
+            omiCards = new ArrayList<>();
+        }
+
+        for (OmiCard omiCard: omiCards) {
+            omiCard.setOmiCardListener(null);
+        }
+
         if (omiCards != null && omiCards.size() > 0) {
             omiCards.clear();
         }
+
         omiCards = new ArrayList<>();
+
+        ArrayList<View> views = new ArrayList<>();
 
         for (int i = 0; i < cardsLayout.getChildCount(); i++) {
             View v = cardsLayout.getChildAt(i);
             v.setVisibility(View.GONE);
+            views.add(v);
+        }
+
+        for (View v: views) {
             cardsLayout.removeView(v);
         }
+        views.clear();
 
         int layerW = cardsLayout.getWidth();
         int layerH = cardsLayout.getHeight();
@@ -679,7 +710,6 @@ public class OmiGameView extends LinearLayout {
         float cardSp = (layerW - cardW)/7.0f;
 
         calcCardH = cardH;
-        final float yp = (layerH - cardH)/2;
         for (int i = 0; i < 8; i++) {
             final OmiCard omiCard = new OmiCard(mContext, cardW, cardH);
             omiCard.setOmiCardListener(getOmiCardListener());
@@ -692,8 +722,10 @@ public class OmiGameView extends LinearLayout {
 
             final boolean animEnd = (i == 7);
 
-            TranslateAnimation tAnimation = new TranslateAnimation(0,xp,yp,yp);
-            tAnimation.setDuration(1000);
+            TranslateAnimation tAnimation = new TranslateAnimation(0,xp,0,0);
+            tAnimation.setDuration(800);
+            tAnimation.setFillBefore(false);
+            tAnimation.setFillEnabled(true);
             tAnimation.setAnimationListener(new Animation.AnimationListener() {
                 @Override
                 public void onAnimationStart(Animation animation) {
@@ -703,7 +735,6 @@ public class OmiGameView extends LinearLayout {
                 @Override
                 public void onAnimationEnd(Animation animation) {
                     omiCard.setX(xp);
-                    omiCard.setY(yp);
 
                     if (animEnd) {
                         secondSetShowAnimationEnd();
@@ -733,7 +764,6 @@ public class OmiGameView extends LinearLayout {
 
         if (iDidTheAction) {
             enablePlayCards(true, 0);
-            iDidTheAction = false;
             if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.secondCardSetAppear();
         }else {
             enablePlayCards(false, 0);
@@ -743,10 +773,10 @@ public class OmiGameView extends LinearLayout {
     private void sortButtonTapped() {
         btnSortHand.setVisibility(View.INVISIBLE);
         Arrays.sort(myCards);
-        updateHandOnCardChanged();
+        rearrangeCards();
     }
 
-    private void updateHandOnCardChanged() {
+    private void rearrangeCards() {
         for (OmiCard omiCard: omiCards) {
             omiCard.setOmiCardListener(null);
             cardsLayout.removeView(omiCard);
@@ -776,7 +806,6 @@ public class OmiGameView extends LinearLayout {
         if (totalCards > 4) {
             float cardSp = (layerW - cardW)/(totalCards - 1);
             calcCardH = cardH;
-            final float yp = (layerH - cardH)/2;
             for (int i = 0; i < totalCards; i++) {
                 final OmiCard omiCard = new OmiCard(mContext, cardW, cardH);
                 omiCard.setOmiCardListener(getOmiCardListener());
@@ -787,8 +816,10 @@ public class OmiGameView extends LinearLayout {
 
                 final float xp = cardSp * i;
 
-                TranslateAnimation tAnimation = new TranslateAnimation(0,xp,yp,yp);
+                TranslateAnimation tAnimation = new TranslateAnimation(0,xp,0,0);
                 tAnimation.setDuration(800);
+                tAnimation.setFillBefore(false);
+                tAnimation.setFillEnabled(true);
                 tAnimation.setAnimationListener(new Animation.AnimationListener() {
                     @Override
                     public void onAnimationStart(Animation animation) {
@@ -798,7 +829,6 @@ public class OmiGameView extends LinearLayout {
                     @Override
                     public void onAnimationEnd(Animation animation) {
                         omiCard.setX(xp);
-                        omiCard.setY(yp);
                     }
 
                     @Override
@@ -812,9 +842,9 @@ public class OmiGameView extends LinearLayout {
             float startX = (layerW/2.0f) - ((cardW/2) * totalCards);
 
             calcCardH = cardH;
-            final float yp = (layerH - cardH)/2;
             for (int i = 0; i < totalCards; i++) {
                 final OmiCard omiCard = new OmiCard(mContext, cardW, cardH);
+                omiCard.setOmiCardListener(getOmiCardListener());
                 omiCard.setCardNo(myCards[i]);
                 cardsLayout.addView(omiCard);
 
@@ -822,8 +852,10 @@ public class OmiGameView extends LinearLayout {
 
                 final float xp = startX + (cardW * i);
 
-                TranslateAnimation tAnimation = new TranslateAnimation(0,xp,yp,yp);
+                TranslateAnimation tAnimation = new TranslateAnimation(0,xp,0,0);
                 tAnimation.setDuration(800);
+                tAnimation.setFillBefore(false);
+                tAnimation.setFillEnabled(true);
                 tAnimation.setAnimationListener(new Animation.AnimationListener() {
                     @Override
                     public void onAnimationStart(Animation animation) {
@@ -833,7 +865,103 @@ public class OmiGameView extends LinearLayout {
                     @Override
                     public void onAnimationEnd(Animation animation) {
                         omiCard.setX(xp);
-                        omiCard.setY(yp);
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animation animation) {
+
+                    }
+                });
+                omiCard.startAnimation(tAnimation);
+            }
+        }
+
+        enablePlayCards(lastEnable, lastEnaSuit);
+    }
+
+    private void updateHandOnCardChanged(int cardNo) {
+        OmiCard remCard = null;
+        for (OmiCard omiCard: omiCards) {
+            if (omiCard.getCardNo() == cardNo) {
+                omiCard.setOmiCardListener(null);
+                cardsLayout.removeView(omiCard);
+                remCard = omiCard;
+                break;
+            }
+        }
+
+        omiCards.remove(remCard);
+
+        if (myCards.length == 0) {
+            return;
+        }
+
+        int layerW = cardsLayout.getWidth();
+        int layerH = cardsLayout.getHeight();
+
+        int cardW = layerW/4;
+        int cardH = layerH;
+
+        cardH = getHeightOfACard(cardW, cardH);
+        cardW = (int)(cardH / cardRatio);
+
+        int totalCards = myCards.length;
+
+        if (totalCards > 4) {
+            float cardSp = (layerW - cardW)/(totalCards - 1);
+            calcCardH = cardH;
+            for (int i = 0; i < totalCards; i++) {
+                final OmiCard omiCard = omiCards.get(i);
+                float currentX = omiCard.getX();
+                final float newX = cardSp * i;
+                float gap = newX - currentX;
+
+                TranslateAnimation tAnimation = new TranslateAnimation(0,gap,0,0);
+                tAnimation.setDuration(800);
+                tAnimation.setFillBefore(false);
+                tAnimation.setFillEnabled(true);
+                tAnimation.setAnimationListener(new Animation.AnimationListener() {
+                    @Override
+                    public void onAnimationStart(Animation animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animation animation) {
+                        omiCard.setX(newX);
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animation animation) {
+
+                    }
+                });
+                omiCard.startAnimation(tAnimation);
+            }
+        }else {
+            float startX = (layerW/2.0f) - ((cardW/2) * totalCards);
+
+            calcCardH = cardH;
+            for (int i = 0; i < totalCards; i++) {
+
+                final OmiCard omiCard = omiCards.get(i);
+                float currentX = omiCard.getX();
+                final float newX = startX + (cardW * i);
+                float gap = newX - currentX;
+
+                TranslateAnimation tAnimation = new TranslateAnimation(0,gap,0,0);
+                tAnimation.setDuration(800);
+                tAnimation.setFillBefore(false);
+                tAnimation.setFillEnabled(true);
+                tAnimation.setAnimationListener(new Animation.AnimationListener() {
+                    @Override
+                    public void onAnimationStart(Animation animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animation animation) {
+                        omiCard.setX(newX);
                     }
 
                     @Override
@@ -916,7 +1044,7 @@ public class OmiGameView extends LinearLayout {
                 }
             }
             myCards = newCards;
-            updateHandOnCardChanged();
+            updateHandOnCardChanged(cardNo);
         }
 
         animationLayout.setVisibility(View.VISIBLE);
