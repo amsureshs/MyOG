@@ -20,7 +20,7 @@
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:orientation="horizontal"
-                android:background="@color/blue_theme">
+                android:background="@color/clear_color">
 
                 <LinearLayout
                     android:id="@+id/trumpsShowLayout"
@@ -138,7 +138,7 @@
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="0.5"
-                    android:background="@color/blue_light"
+                    android:background="@color/clear_color"
                     android:orientation="vertical">
 
                     <!--trumps select view-->
@@ -249,7 +249,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="80dp"
                                 android:layout_marginRight="2dp"
-                                android:background="@color/red"
+                                android:background="@color/clear_color"
                                 android:id="@+id/imgCard4" />
 
                         </LinearLayout>
@@ -266,13 +266,13 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="80dp"
                                 android:layout_marginBottom="1dp"
-                                android:background="@color/red"
+                                android:background="@color/clear_color"
                                 android:id="@+id/imgCard3" />
 
                             <ImageView
                                 android:layout_width="match_parent"
                                 android:layout_height="80dp"
-                                android:background="@color/red"
+                                android:background="@color/clear_color"
                                 android:layout_marginTop="1dp"
                                 android:id="@+id/imgCard1" />
 
@@ -289,7 +289,7 @@
                             <ImageView
                                 android:layout_width="match_parent"
                                 android:layout_height="80dp"
-                                android:background="@color/red"
+                                android:background="@color/clear_color"
                                 android:layout_marginLeft="2dp"
                                 android:id="@+id/imgCard2" />
 
@@ -336,7 +336,7 @@
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:background="@color/blue_theme">
+                android:background="@color/clear_color">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -407,7 +407,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:background="@color/blue_light">
+                android:background="@color/clear_color">
 
             </ScrollView>
 
