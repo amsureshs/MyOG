@@ -125,6 +125,8 @@ public class OmiGameView extends LinearLayout {
     private boolean lastEnable = false;
     private int lastEnaSuit = 0;
 
+    private int lastPlayNo = 0;
+
     public OmiGameView(Context context, OmiGameViewListener omiGameViewListener) {
         super(context);
         init(context, omiGameViewListener);
@@ -755,7 +757,9 @@ public class OmiGameView extends LinearLayout {
         return new OmiCard.OmiCardListener() {
             @Override
             public void cardSelected(OmiCard card, int option) {
-                playerPlayedWithOption(myPlayerNo, card.getCardNo(), option);
+                if (lastPlayNo == 4) lastPlayNo = 0;
+                lastPlayNo++;
+                playerPlayedWithOption(lastPlayNo, card.getCardNo(), option);
             }
         };
     }
@@ -1171,8 +1175,8 @@ public class OmiGameView extends LinearLayout {
     private void showCardSelectedOptionAnimation(final OmiCard omiCard, final int playerNo, int option) {
         if (option <= 0) {
 
-            omiCard.setVisibility(View.INVISIBLE);
-            animationLayout.removeView(omiCard);
+            omiCard.setVisibility(View.GONE);
+            //animationLayout.removeView(omiCard);
             animationLayout.setVisibility(View.GONE);
 
             if (playerNo == 1) {
@@ -1184,6 +1188,8 @@ public class OmiGameView extends LinearLayout {
             }else {
                 imgCard4.setVisibility(VISIBLE);
             }
+
+            test(playerNo);
 
             return;
         }
@@ -1218,8 +1224,8 @@ public class OmiGameView extends LinearLayout {
             @Override
             public void onAnimationEnd(Animation animation) {
 
-                omiCard.setVisibility(View.INVISIBLE);
-                animationLayout.removeView(omiCard);
+                omiCard.setVisibility(View.GONE);
+                //animationLayout.removeView(omiCard);
                 animationLayout.setVisibility(View.GONE);
 
                 if (playerNo == 1) {
@@ -1233,6 +1239,7 @@ public class OmiGameView extends LinearLayout {
                 }
 
                 //playCardAnimationEnd();
+                test(playerNo);
             }
 
             @Override
@@ -1241,6 +1248,24 @@ public class OmiGameView extends LinearLayout {
             }
         });
         omiCard.startAnimation(rotateAnimation);
+
+    }
+
+    private void test(int playerNo) {
+        if (playerNo != 4) {
+            return;
+        }
+
+        animationLayout.setVisibility(View.VISIBLE);
+        animationLayout.post(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < animationLayout.getChildCount(); i++) {
+                    View v = animationLayout.getChildAt(i);
+                    v.setVisibility(View.VISIBLE);
+                }
+            }
+        });
 
     }
 
@@ -1257,9 +1282,6 @@ public class OmiGameView extends LinearLayout {
     }
 
     private void playCardAnimationEnd() {
-
-        //TODO show cards go to player animation and then call judge
-
         judgeGame();
     }
 
@@ -1271,37 +1293,47 @@ public class OmiGameView extends LinearLayout {
             updatePack();
             mOmiGameStat.addWinToPlayer(winner);
 
-            if (mOmiHand.isHandOver()) {
+            showRoundWinAnimation(winner);
+            //judge is continuing after the animation
 
-                int winningTeam = mOmiHand.getWinningTeam();
-                if (winningTeam == 1) {
-                    mOmiGameStat.addWinToTeam(1);
-                }else if (winningTeam == 2) {
-                    mOmiGameStat.addWinToTeam(2);
-                }else {
-                    mOmiGameStat.addDraws();
-                }
-
-                int endReach = mOmiGameStat.getTeamIfWin();
-                if (endReach == 0) {
-                    if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.timeToNextHand();
-                }else if (endReach == 1) {
-                    showWinningScreen(1);
-                }else if (endReach == 2) {
-                    showWinningScreen(2);
-                }
-            }else {
-                if (winner == myPlayerNo) {
-                    mOmiRound = null;
-                    enablePlayCards(true, 0);
-                }else {
-                    enablePlayCards(false, 0);
-                }
-            }
         } else {
             int nextPlayer = mOmiRound.getNextPlayer();
             if (nextPlayer == myPlayerNo) {
                 enablePlayCards(true, mOmiRound.getSuit());
+            }else {
+                enablePlayCards(false, 0);
+            }
+        }
+    }
+
+    private void showRoundWinAnimation(int winner) {
+
+    }
+
+    private void showingRoundWinAnimationEnd(int winner) {
+        if (mOmiHand.isHandOver()) {
+
+            int winningTeam = mOmiHand.getWinningTeam();
+            if (winningTeam == 1) {
+                mOmiGameStat.addWinToTeam(1);
+            }else if (winningTeam == 2) {
+                mOmiGameStat.addWinToTeam(2);
+            }else {
+                mOmiGameStat.addDraws();
+            }
+
+            int endReach = mOmiGameStat.getTeamIfWin();
+            if (endReach == 0) {
+                if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.timeToNextHand();
+            }else if (endReach == 1) {
+                showWinningScreen(1);
+            }else if (endReach == 2) {
+                showWinningScreen(2);
+            }
+        }else {
+            if (winner == myPlayerNo) {
+                mOmiRound = null;
+                enablePlayCards(true, 0);
             }else {
                 enablePlayCards(false, 0);
             }
