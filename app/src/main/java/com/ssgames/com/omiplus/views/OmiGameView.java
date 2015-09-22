@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Size;
 import android.view.Gravity;
@@ -82,10 +83,10 @@ public class OmiGameView extends LinearLayout {
     private ImageButton btnTrumps4 = null;
 
     private LinearLayout cardPlayedLayout = null;
-    private ImageView imgCard1 = null;
-    private ImageView imgCard2 = null;
-    private ImageView imgCard3 = null;
-    private ImageView imgCard4 = null;
+    private ImageButton btnPlayedCard1 = null;
+    private ImageButton btnPlayedCard2 = null;
+    private ImageButton btnPlayedCard3 = null;
+    private ImageButton btnPlayedCard4 = null;
 
     private ImageButton btnSortHand = null;
     private ImageButton btnShowChat = null;
@@ -102,7 +103,7 @@ public class OmiGameView extends LinearLayout {
     private LinearLayout trumpsShowLayout = null;
     private ImageView imgTrumpsView = null;
 
-    private LinearLayout animationLayout = null;
+    private RelativeLayout animationLayout = null;
 
     private AlertDialog mAlertDialog = null;
 
@@ -619,12 +620,17 @@ public class OmiGameView extends LinearLayout {
         Bitmap reTrumpsMap = Bitmap.createScaledBitmap(trumpsMap, w, w, false);
         imgTrumpsView.setImageBitmap(reTrumpsMap);
 
+        float animLW = animationLayout.getWidth();
+        float animLH = animationLayout.getHeight();
+
         final ImageView imgView = new ImageView(mContext);
         imgView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         imgView.setImageBitmap(reTrumpsMap);
+        imgView.setX(animLW/2.0f - w/2.0f);
+        imgView.setY(animLH/2.0f - w/2.0f);
         animationLayout.addView(imgView);
 
-        ScaleAnimation scaleAnimation = new ScaleAnimation(1, 5.5f, 1, 5.5f, w/2, w/2);
+        ScaleAnimation scaleAnimation = new ScaleAnimation(1, 3.5f, 1, 3.5f, Animation.ABSOLUTE, animLW/2.0f, Animation.ABSOLUTE, animLH/2.0f);
         scaleAnimation.setDuration(800);
         scaleAnimation.setFillBefore(false);
         scaleAnimation.setFillEnabled(true);
@@ -1066,15 +1072,24 @@ public class OmiGameView extends LinearLayout {
         float lW = animationLayout.getWidth();
         float lH = animationLayout.getHeight();
 
-        float imgCardW = imgCard1.getWidth();
-        float imgCardH = imgCard1.getHeight();
+        float imgCardW = btnPlayedCard1.getWidth();
+        float imgCardH = btnPlayedCard1.getHeight();
 
         int cardH = getHeightOfACard((int) imgCardW, (int) imgCardH);
         int cardW = (int)(cardH / cardRatio);
 
         Bitmap diamMap = BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.card_102);
         Bitmap reDiamMap = Bitmap.createScaledBitmap(diamMap, cardW, cardH, false);
-        imgCard1.setImageBitmap(reDiamMap);
+
+        if (playerNo == 1) {
+            btnPlayedCard1.setImageBitmap(reDiamMap);
+        }else if (playerNo == 2) {
+            btnPlayedCard2.setImageBitmap(reDiamMap);
+        }else if (playerNo == 3) {
+            btnPlayedCard3.setImageBitmap(reDiamMap);
+        }else {
+            btnPlayedCard4.setImageBitmap(reDiamMap);
+        }
 
         float startX = 0;
         float startY = 0;
@@ -1086,38 +1101,38 @@ public class OmiGameView extends LinearLayout {
         float yDelta = 0;
 
         if (playerNo == 1) {
-            startX = 0;
-            startY = lH/2.0f - cardH;
+            startX = lW/2.0f - cardW/2.0f;
+            startY = lH - 2*cardH;
 
-            endX = 0;
-            endY = imgCard1.getHeight()/2.0f;
+            endX = lW/2.0f - cardW/2.0f;
+            endY = lH/2.0f + dpToPx(1);
 
             xDelta = endX-startX;
             yDelta = endY-startY;
         }else if (playerNo == 3) {
-            startX = 0;
-            startY = -(lH/2.0f - cardH);
+            startX = lW/2.0f - cardW/2.0f;
+            startY = cardH - dpToPx(1);
 
-            endX = 0;
-            endY = -imgCard3.getHeight()/2.0f;
+            endX = lW/2.0f - cardW/2.0f;
+            endY = lH/2.0f - btnPlayedCard3.getHeight();
 
             xDelta = endX-startX;
             yDelta = endY-startY;
         }else if (playerNo == 2) {
-            startX = lW/2.0f - cardW;
-            startY = 0;
+            startX = lW - 2*cardW;
+            startY = lH/2.0f - btnPlayedCard2.getHeight()/2.0f;
 
-            endX = imgCard3.getWidth();
-            endY = 0;
+            endX = lW/2.0f + btnPlayedCard2.getWidth()/2.0f + dpToPx(4);
+            endY = lH/2.0f - btnPlayedCard2.getHeight()/2.0f;
 
             xDelta = endX-startX;
             yDelta = endY-startY;
         }else if (playerNo == 4) {
-            startX = -(lW/2.0f - cardW);
-            startY = 0;
+            startX = cardW;
+            startY = lH/2.0f - btnPlayedCard2.getHeight()/2.0f;
 
-            endX = -imgCard4.getWidth();
-            endY = 0;
+            endX = lW/2.0f - btnPlayedCard2.getWidth()/2.0f - btnPlayedCard2.getWidth() - dpToPx(4);
+            endY = lH/2.0f - btnPlayedCard2.getHeight()/2.0f;
 
             xDelta = endX-startX;
             yDelta = endY-startY;
@@ -1176,17 +1191,16 @@ public class OmiGameView extends LinearLayout {
         if (option <= 0) {
 
             omiCard.setVisibility(View.GONE);
-            //animationLayout.removeView(omiCard);
             animationLayout.setVisibility(View.GONE);
 
             if (playerNo == 1) {
-                imgCard1.setVisibility(VISIBLE);
+                btnPlayedCard1.setVisibility(VISIBLE);
             }else if (playerNo == 2) {
-                imgCard2.setVisibility(VISIBLE);
+                btnPlayedCard2.setVisibility(VISIBLE);
             }else if (playerNo == 3) {
-                imgCard3.setVisibility(VISIBLE);
+                btnPlayedCard3.setVisibility(VISIBLE);
             }else {
-                imgCard4.setVisibility(VISIBLE);
+                btnPlayedCard4.setVisibility(VISIBLE);
             }
 
             test(playerNo);
@@ -1198,20 +1212,20 @@ public class OmiGameView extends LinearLayout {
         float yDelta;
 
         if (playerNo == 1) {
-            xDelta = 0.5f;
-            yDelta = 1.0f;
+            xDelta = animationLayout.getWidth()/2.0f;
+            yDelta = animationLayout.getHeight()/2.0f + dpToPx(1) + btnPlayedCard1.getHeight()/2.0f;
         }else if (playerNo == 2) {
-            xDelta = 1.5f;
-            yDelta = 0.5f;
+            xDelta = animationLayout.getWidth()/2.0f + btnPlayedCard2.getWidth() + dpToPx(4);
+            yDelta = animationLayout.getHeight()/2.0f;
         }else if (playerNo == 3) {
-            xDelta = 0.5f;
-            yDelta = 0.0f;
+            xDelta = animationLayout.getWidth()/2.0f;
+            yDelta = animationLayout.getHeight()/2.0f - dpToPx(1) - btnPlayedCard3.getHeight()/2.0f;
         }else {
-            xDelta = -0.5f;
-            yDelta = 0.5f;
+            xDelta = animationLayout.getWidth()/2.0f - btnPlayedCard2.getWidth() - dpToPx(4);
+            yDelta = animationLayout.getHeight()/2.0f;
         }
 
-        RotateAnimation rotateAnimation = new RotateAnimation(0, 360, Animation.RELATIVE_TO_SELF, xDelta, Animation.RELATIVE_TO_SELF, yDelta);
+        RotateAnimation rotateAnimation = new RotateAnimation(0.0f, 360.0f, Animation.ABSOLUTE, xDelta, Animation.ABSOLUTE, yDelta);
         rotateAnimation.setFillBefore(false);
         rotateAnimation.setFillEnabled(true);
         rotateAnimation.setDuration(500);
@@ -1225,17 +1239,16 @@ public class OmiGameView extends LinearLayout {
             public void onAnimationEnd(Animation animation) {
 
                 omiCard.setVisibility(View.GONE);
-                //animationLayout.removeView(omiCard);
                 animationLayout.setVisibility(View.GONE);
 
                 if (playerNo == 1) {
-                    imgCard1.setVisibility(VISIBLE);
+                    btnPlayedCard1.setVisibility(VISIBLE);
                 }else if (playerNo == 2) {
-                    imgCard2.setVisibility(VISIBLE);
+                    btnPlayedCard2.setVisibility(VISIBLE);
                 }else if (playerNo == 3) {
-                    imgCard3.setVisibility(VISIBLE);
+                    btnPlayedCard3.setVisibility(VISIBLE);
                 }else {
-                    imgCard4.setVisibility(VISIBLE);
+                    btnPlayedCard4.setVisibility(VISIBLE);
                 }
 
                 //playCardAnimationEnd();
@@ -1390,7 +1403,7 @@ public class OmiGameView extends LinearLayout {
         trumpsSelectLayout = (LinearLayout)inflater.findViewById(R.id.trumpsSelectLayout);
         trumpsSelectLayout.setVisibility(View.GONE);
 
-        animationLayout = (LinearLayout)inflater.findViewById(R.id.animationLayout);
+        animationLayout = (RelativeLayout)inflater.findViewById(R.id.animationLayout);
         animationLayout.setEnabled(true);
         animationLayout.setVisibility(View.GONE);
 
@@ -1432,15 +1445,15 @@ public class OmiGameView extends LinearLayout {
         cardPlayedLayout = (LinearLayout)inflater.findViewById(R.id.cardPlayedLayout);
         cardPlayedLayout.setVisibility(View.GONE);
 
-        imgCard1 = (ImageView)inflater.findViewById(R.id.imgCard1);
-        imgCard2 = (ImageView)inflater.findViewById(R.id.imgCard2);
-        imgCard3 = (ImageView)inflater.findViewById(R.id.imgCard3);
-        imgCard4 = (ImageView)inflater.findViewById(R.id.imgCard4);
+        btnPlayedCard1 = (ImageButton)inflater.findViewById(R.id.btnPlayedCard1);
+        btnPlayedCard2 = (ImageButton)inflater.findViewById(R.id.btnPlayedCard2);
+        btnPlayedCard3 = (ImageButton)inflater.findViewById(R.id.btnPlayedCard3);
+        btnPlayedCard4 = (ImageButton)inflater.findViewById(R.id.btnPlayedCard4);
 
-        imgCard1.setVisibility(INVISIBLE);
-        imgCard2.setVisibility(INVISIBLE);
-        imgCard3.setVisibility(INVISIBLE);
-        imgCard4.setVisibility(INVISIBLE);
+        btnPlayedCard1.setVisibility(INVISIBLE);
+        btnPlayedCard2.setVisibility(INVISIBLE);
+        btnPlayedCard3.setVisibility(INVISIBLE);
+        btnPlayedCard4.setVisibility(INVISIBLE);
 
         btnSortHand = (ImageButton)inflater.findViewById(R.id.btnSortHand);
         btnSortHand.setOnClickListener(new OnClickListener() {
@@ -1649,5 +1662,11 @@ public class OmiGameView extends LinearLayout {
         }else {
             return containerH;
         }
+    }
+
+    private int dpToPx(int dp) {
+        DisplayMetrics displayMetrics = mContext.getResources().getDisplayMetrics();
+        int px = Math.round(dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
+        return px;
     }
 }

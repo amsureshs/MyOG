@@ -245,12 +245,12 @@
                             android:gravity="center"
                             android:orientation="vertical">
 
-                            <ImageView
+                            <ImageButton
                                 android:layout_width="match_parent"
                                 android:layout_height="80dp"
                                 android:layout_marginRight="2dp"
                                 android:background="@color/clear_color"
-                                android:id="@+id/imgCard4" />
+                                android:id="@+id/btnPlayedCard4" />
 
                         </LinearLayout>
 
@@ -262,19 +262,19 @@
                             android:gravity="center"
                             android:orientation="vertical">
 
-                            <ImageView
+                            <ImageButton
                                 android:layout_width="match_parent"
                                 android:layout_height="80dp"
                                 android:layout_marginBottom="1dp"
                                 android:background="@color/clear_color"
-                                android:id="@+id/imgCard3" />
+                                android:id="@+id/btnPlayedCard3" />
 
-                            <ImageView
+                            <ImageButton
                                 android:layout_width="match_parent"
                                 android:layout_height="80dp"
                                 android:background="@color/clear_color"
                                 android:layout_marginTop="1dp"
-                                android:id="@+id/imgCard1" />
+                                android:id="@+id/btnPlayedCard1" />
 
                         </LinearLayout>
 
@@ -286,12 +286,12 @@
                             android:gravity="center"
                             android:orientation="vertical">
 
-                            <ImageView
+                            <ImageButton
                                 android:layout_width="match_parent"
                                 android:layout_height="80dp"
                                 android:background="@color/clear_color"
                                 android:layout_marginLeft="2dp"
-                                android:id="@+id/imgCard2" />
+                                android:id="@+id/btnPlayedCard2" />
 
                         </LinearLayout>
 
@@ -448,16 +448,15 @@
 
     </LinearLayout>
 
-        <LinearLayout
+        <RelativeLayout
             android:id="@+id/animationLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center"
             android:orientation="vertical"
             android:background="@color/clear_color"
             android:visibility="gone">
 
-        </LinearLayout>
+        </RelativeLayout>
 
     </RelativeLayout>
 
