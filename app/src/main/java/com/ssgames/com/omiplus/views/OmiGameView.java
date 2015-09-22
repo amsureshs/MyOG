@@ -1243,11 +1243,11 @@ public class OmiGameView extends LinearLayout {
 
                 if (playerNo == 1) {
                     btnPlayedCard1.setVisibility(VISIBLE);
-                }else if (playerNo == 2) {
+                } else if (playerNo == 2) {
                     btnPlayedCard2.setVisibility(VISIBLE);
-                }else if (playerNo == 3) {
+                } else if (playerNo == 3) {
                     btnPlayedCard3.setVisibility(VISIBLE);
-                }else {
+                } else {
                     btnPlayedCard4.setVisibility(VISIBLE);
                 }
 
@@ -1269,16 +1269,18 @@ public class OmiGameView extends LinearLayout {
             return;
         }
 
-        animationLayout.setVisibility(View.VISIBLE);
-        animationLayout.post(new Runnable() {
-            @Override
-            public void run() {
-                for (int i = 0; i < animationLayout.getChildCount(); i++) {
-                    View v = animationLayout.getChildAt(i);
-                    v.setVisibility(View.VISIBLE);
-                }
-            }
-        });
+        showRoundWinAnimation(4);
+
+//        animationLayout.setVisibility(View.VISIBLE);
+//        animationLayout.post(new Runnable() {
+//            @Override
+//            public void run() {
+//                for (int i = 0; i < animationLayout.getChildCount(); i++) {
+//                    View v = animationLayout.getChildAt(i);
+//                    v.setVisibility(View.VISIBLE);
+//                }
+//            }
+//        });
 
     }
 
@@ -1319,13 +1321,90 @@ public class OmiGameView extends LinearLayout {
         }
     }
 
-    private void showRoundWinAnimation(int winner) {
+    private void showRoundWinAnimation(final int winner) {
 
+        animationLayout.setVisibility(View.VISIBLE);
+        animationLayout.post(new Runnable() {
+            @Override
+            public void run() {
+
+                float lW = animationLayout.getWidth();
+                float lH = animationLayout.getHeight();
+
+                float vW = btnPlayedCard1.getWidth();
+                float vH = btnPlayedCard1.getHeight();
+
+                btnPlayedCard1.setVisibility(View.INVISIBLE);
+                btnPlayedCard2.setVisibility(View.INVISIBLE);
+                btnPlayedCard3.setVisibility(View.INVISIBLE);
+                btnPlayedCard4.setVisibility(View.INVISIBLE);
+
+                float endX;
+                float endY;
+
+                if (winner == 1) {
+                    endX = lW/2.0f - vW/2.0f;
+                    endY = lH - 2*vH;
+                } else if (winner == 2) {
+                    endX = lW - vW;
+                    endY = lH/2.0f - vH/2.0f;
+                } else if (winner == 3) {
+                    endX = lW/2.0f - vW/2.0f;
+                    endY = vH;
+                } else {
+                    endX = vW;
+                    endY = lH/2.0f - vH/2.0f;
+                }
+
+                for (int i = 0; i < animationLayout.getChildCount(); i++) {
+                    final View v = animationLayout.getChildAt(i);
+                    v.setVisibility(View.VISIBLE);
+
+                    float startX = v.getX();
+                    float startY = v.getY();
+
+                    float xDelta = endX - startX;
+                    float yDelta = endY - startY;
+
+                    final boolean endAnim = (i == 3);
+
+                    TranslateAnimation tAnimation = new TranslateAnimation(0, xDelta, 0, yDelta);
+                    tAnimation.setDuration(800);
+                    tAnimation.setFillBefore(false);
+                    tAnimation.setFillEnabled(true);
+                    tAnimation.setAnimationListener(new Animation.AnimationListener() {
+                        @Override
+                        public void onAnimationStart(Animation animation) {
+
+                        }
+
+                        @Override
+                        public void onAnimationEnd(Animation animation) {
+
+                            v.setVisibility(View.GONE);
+                            animationLayout.removeView(v);
+
+                            if (endAnim) {
+                                animationLayout.setVisibility(View.GONE);
+                                //showingRoundWinAnimationEnd(winner);
+                            }
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(Animation animation) {
+
+                        }
+                    });
+                    v.startAnimation(tAnimation);
+
+                }
+            }
+        });
     }
 
     private void showingRoundWinAnimationEnd(int winner) {
         if (mOmiHand.isHandOver()) {
-
+            updateWinHands();
             int winningTeam = mOmiHand.getWinningTeam();
             if (winningTeam == 1) {
                 mOmiGameStat.addWinToTeam(1);
@@ -1336,14 +1415,15 @@ public class OmiGameView extends LinearLayout {
             }
 
             int endReach = mOmiGameStat.getTeamIfWin();
-            if (endReach == 0) {
+            if (endReach == 0) {//continue game
                 if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.timeToNextHand();
-            }else if (endReach == 1) {
+            }else if (endReach == 1) {//team 1 win
                 showWinningScreen(1);
-            }else if (endReach == 2) {
+            }else if (endReach == 2) {//team 2 win
                 showWinningScreen(2);
             }
         }else {
+            updateWinHands();
             if (winner == myPlayerNo) {
                 mOmiRound = null;
                 enablePlayCards(true, 0);
@@ -1351,6 +1431,13 @@ public class OmiGameView extends LinearLayout {
                 enablePlayCards(false, 0);
             }
         }
+    }
+
+    private void updateWinHands() {
+        txtWon1.setText("Won " + mOmiHand.getPlayer1Wins());
+        txtWon2.setText("Won " + mOmiHand.getPlayer2Wins());
+        txtWon3.setText("Won " + mOmiHand.getPlayer3Wins());
+        txtWon4.setText("Won " + mOmiHand.getPlayer4Wins());
     }
 
     private void showWinningScreen(int team) {
