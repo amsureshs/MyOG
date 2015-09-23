@@ -1,6 +1,8 @@
 package com.ssgames.com.omiplus.views;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -29,6 +31,9 @@ public class OmiCard extends LinearLayout{
     private ImageButton btnCard = null;
     private ImageView imgCardSuit = null;
     private TextView txtName = null;
+
+    private int mWidth = 0;
+    private int mHeight = 0;
 
     private int cardNo;
     private boolean enable = false;
@@ -74,34 +79,42 @@ public class OmiCard extends LinearLayout{
     public void setCardNo(int cardNo) {
         this.cardNo = cardNo;
 
-        String cardName = getCardName(cardNo);
-        int suitNo = getSuitOfCard(cardNo);
+//        String cardName = getCardName(cardNo);
+//        int suitNo = getSuitOfCard(cardNo);
+//
+//        txtName.setText(cardName);
+//        switch (suitNo) {
+//            case 1 :
+//                txtName.setTextColor(mContext.getResources().getColor(R.color.black));
+//                imgCardSuit.setImageResource(R.mipmap.spaids);
+//                break;
+//            case 2 :
+//                txtName.setTextColor(mContext.getResources().getColor(R.color.red));
+//                imgCardSuit.setImageResource(R.mipmap.hearts);
+//                break;
+//            case 3 :
+//                txtName.setTextColor(mContext.getResources().getColor(R.color.black));
+//                imgCardSuit.setImageResource(R.mipmap.clubs);
+//                break;
+//            case 4 :
+//                txtName.setTextColor(mContext.getResources().getColor(R.color.red));
+//                imgCardSuit.setImageResource(R.mipmap.diamonds);
+//                break;
+//            default :
+//                break;
+//        }
 
-        txtName.setText(cardName);
-        switch (suitNo) {
-            case 1 :
-                txtName.setTextColor(mContext.getResources().getColor(R.color.black));
-                imgCardSuit.setImageResource(R.mipmap.spaids);
-                break;
-            case 2 :
-                txtName.setTextColor(mContext.getResources().getColor(R.color.red));
-                imgCardSuit.setImageResource(R.mipmap.hearts);
-                break;
-            case 3 :
-                txtName.setTextColor(mContext.getResources().getColor(R.color.black));
-                imgCardSuit.setImageResource(R.mipmap.clubs);
-                break;
-            case 4 :
-                txtName.setTextColor(mContext.getResources().getColor(R.color.red));
-                imgCardSuit.setImageResource(R.mipmap.diamonds);
-                break;
-            default :
-                break;
-        }
+        int rId = mContext.getResources().getIdentifier("@mipmap/card_" + cardNo, null, mContext.getPackageName());
+
+        Bitmap bitmap = BitmapFactory.decodeResource(mContext.getResources(), rId);
+        Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, mWidth, mHeight, false);
+        btnCard.setImageBitmap(scaledBitmap);
     }
 
     private void init(Context context, int width, int height) {
         mContext = context;
+        mWidth = width;
+        mHeight = height;
 
         View inflater = LayoutInflater.from(context).inflate(R.layout.view_omi_card, this, true);
 

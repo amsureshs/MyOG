@@ -48,17 +48,18 @@ public class OmiGameView extends LinearLayout {
 
     private static final String TAG = OmiGameView.class.getSimpleName();
 
-    public static double cardRatio = 1.4;//height/width
+    public static double cardRatio = 247.0/170.0;//height/width
 
     public interface OmiGameViewListener {
 
-        public void playerDidDistributeCards(int[] player1Set, int[] player2Set, int[] player3Set, int[] player4Set);
-        public void firstCardSetAppear();
-        public void playerDidSelectTrumps(int suitNo, int option);
-        public void secondCardSetAppear();
-        public void playerDidPlayCard(int cardNo, int option);
-        public void timeToNextHand();
-        public void gameDidEndWithWinningTeam(int team);
+        void playerDidDistributeCards(int[] player1Set, int[] player2Set, int[] player3Set, int[] player4Set);
+        void firstCardSetAppear();
+        void playerDidSelectTrumps(int suitNo, int option);
+        void secondCardSetAppear();
+        void playerDidPlayCard(int cardNo, int option);
+        void timeToNextHand();
+        void gameDidEndWithWinningTeam(int team);
+        void goBackToHome();
     }
 
     private Context mContext = null;
@@ -104,6 +105,7 @@ public class OmiGameView extends LinearLayout {
     private ImageView imgTrumpsView = null;
 
     private RelativeLayout animationLayout = null;
+    private LinearLayout winLayout = null;
 
     private AlertDialog mAlertDialog = null;
 
@@ -1078,8 +1080,7 @@ public class OmiGameView extends LinearLayout {
         int cardH = getHeightOfACard((int) imgCardW, (int) imgCardH);
         int cardW = (int)(cardH / cardRatio);
 
-        Bitmap diamMap = BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.card_102);
-        Bitmap reDiamMap = Bitmap.createScaledBitmap(diamMap, cardW, cardH, false);
+        Bitmap reDiamMap = getCardImage(cardNo, cardW, cardH);
 
         if (playerNo == 1) {
             btnPlayedCard1.setImageBitmap(reDiamMap);
@@ -1441,7 +1442,7 @@ public class OmiGameView extends LinearLayout {
     }
 
     private void showWinningScreen(int team) {
-
+        winLayout.setVisibility(View.VISIBLE);
     }
 
     private void winningScreenAnimationEnd() {
@@ -1590,6 +1591,27 @@ public class OmiGameView extends LinearLayout {
             @Override
             public void onClick(View v) {
                 playerShuffledThePack(3);
+            }
+        });
+
+
+        //win screen
+        winLayout = (LinearLayout)inflater.findViewById(R.id.winLayout);
+        winLayout.setVisibility(View.GONE);
+
+        ImageButton btnBackHome = (ImageButton)inflater.findViewById(R.id.btnBackHome);
+        btnBackHome.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.goBackToHome();
+            }
+        });
+
+        ImageButton btnGameStats = (ImageButton)inflater.findViewById(R.id.btnGameStats);
+        btnGameStats.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
             }
         });
     }
@@ -1755,5 +1777,15 @@ public class OmiGameView extends LinearLayout {
         DisplayMetrics displayMetrics = mContext.getResources().getDisplayMetrics();
         int px = Math.round(dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
         return px;
+    }
+
+    private Bitmap getCardImage(int cardNo, int width, int height) {
+
+        int rId = mContext.getResources().getIdentifier("@mipmap/card_" + cardNo, null, mContext.getPackageName());
+
+        Bitmap bitmap = BitmapFactory.decodeResource(mContext.getResources(), rId);
+        Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, width, height, false);
+
+        return scaledBitmap;
     }
 }

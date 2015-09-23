@@ -79,8 +79,8 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
 
     private ArrayList<OmiPlayer> mPlayerArrayList = null;
 
-
     private boolean isGameStarted = false;
+    private boolean isWinCalled = false;
 
     /*
 	 * Bluetooth broadcast receiver
@@ -364,7 +364,6 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT);
-        //nameET.setTextColor(getResources().getColor(R.color.black));
         nameET.setHint("Nickname");
         nameET.setLayoutParams(lp);
         nameET.setSingleLine(true);
@@ -515,7 +514,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
 
     private void joinedConnectionDisconnected(BluetoothDevice device) {
         updateConnectedPartners();
-        if (isGameStarted) {
+        if (isGameStarted && !isWinCalled) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Oops!");
             builder.setMessage("One partner's connection lost.");
@@ -666,16 +665,7 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
 
     private void startHostedGame() {
         isGameStarted = true;
-        //TODO
-        //inform shuffle and shuffling
         sendShuffleCommands();
-    }
-
-    private void testWriteToAll() {
-        BTDataPacket btDataPacket = new BTDataPacket();
-        btDataPacket.setOpCode(Constants.OpCodes.OPCODE_NONE);
-        btDataPacket.setBody("Test");
-        sendCommandToAllConnections(btDataPacket);
     }
 
     private void sendShuffleCommands() {
@@ -1107,22 +1097,24 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
     }
 
     private void joinedGameDisconnected() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Oops!");
-        builder.setMessage("Game connection lost.");
-        builder.setNegativeButton("Ok", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                mAlertDialog.dismiss();
-                if (!isJoinedToGame) {
-                    endGame();
+        if (!isWinCalled) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Oops!");
+            builder.setMessage("Game connection lost.");
+            builder.setNegativeButton("Ok", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    mAlertDialog.dismiss();
+                    if (!isJoinedToGame) {
+                        endGame();
+                    }
                 }
-            }
-        });
-        mAlertDialog = builder.create();
-        mAlertDialog.setCanceledOnTouchOutside(false);
-        mAlertDialog.setCancelable(false);
-        mAlertDialog.show();
+            });
+            mAlertDialog = builder.create();
+            mAlertDialog.setCanceledOnTouchOutside(false);
+            mAlertDialog.setCancelable(false);
+            mAlertDialog.show();
+        }
     }
 
     private void startJoinedGame() {
@@ -1394,13 +1386,9 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-
-                Log.v(TAG, "dataReceived...................");
-
                 if (mIsHostGame) {
                     handleReceivedData(connection, buffer);
                 }else {
-                    //handle incoming data (commands)
                     handleReceivedData(buffer);
                 }
             }
@@ -1587,6 +1575,11 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
 
     @Override
     public void gameDidEndWithWinningTeam(int team) {
+        isWinCalled = true;
+    }
 
+    @Override
+    public void goBackToHome() {
+        endGame();
     }
 }
