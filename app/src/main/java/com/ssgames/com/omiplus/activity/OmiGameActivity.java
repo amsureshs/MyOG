@@ -139,33 +139,33 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
 
         mGameLayout.addView(mOmiGameView);
 
-//        Intent intent = getIntent();
-//        mIsHostGame = intent.getBooleanExtra(Constants.ExtraKey.EXTRA_KEY_HOST_OR_JOIN, false);
-//
-//        mBTAdapter = BluetoothAdapter.getDefaultAdapter();
-//        if (mBTAdapter == null) {
-//            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-//            builder.setTitle("Sorry!");
-//            builder.setMessage("Your device does not support bluetooth.");
-//            builder.setNegativeButton("Ok", new DialogInterface.OnClickListener() {
-//                @Override
-//                public void onClick(DialogInterface dialog, int which) {
-//                    mAlertDialog.dismiss();
-//                    noBluetoothAndEndGame();
-//                }
-//            });
-//            mAlertDialog = builder.create();
-//            mAlertDialog.setCanceledOnTouchOutside(false);
-//            mAlertDialog.setCancelable(false);
-//            mAlertDialog.show();
-//        }else {
-//            if (!mBTAdapter.isEnabled()) {
-//                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-//                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-//            }else {
-//                configureGame();
-//            }
-//        }
+        Intent intent = getIntent();
+        mIsHostGame = intent.getBooleanExtra(Constants.ExtraKey.EXTRA_KEY_HOST_OR_JOIN, false);
+
+        mBTAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mBTAdapter == null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Sorry!");
+            builder.setMessage("Your device does not support bluetooth.");
+            builder.setNegativeButton("Ok", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    mAlertDialog.dismiss();
+                    noBluetoothAndEndGame();
+                }
+            });
+            mAlertDialog = builder.create();
+            mAlertDialog.setCanceledOnTouchOutside(false);
+            mAlertDialog.setCancelable(false);
+            mAlertDialog.show();
+        }else {
+            if (!mBTAdapter.isEnabled()) {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            }else {
+                configureGame();
+            }
+        }
     }
 
     @Override
@@ -1221,8 +1221,10 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
                 int suitNo = bodyJson.optInt(Constants.OmiJsonKey.SELECTED_TRUMPS_KEY);
                 int option = bodyJson.optInt(Constants.OmiJsonKey.OPTION_KEY);
 
+                mOmiGameView.playerSelectedTrumps(suitNo, option);
+
                 BTDataPacket dataPacket = new BTDataPacket();
-                dataPacket.setOpCode(Constants.OpCodes.OPCODE_CARDS_AVAILABLE);
+                dataPacket.setOpCode(Constants.OpCodes.OPCODE_PLAYER_SELECTED_TRUMPS);
 
                 StringBuilder stringBuilderBody = new StringBuilder("{");
                 stringBuilderBody.append("\"" + Constants.OmiJsonKey.PLAYER_NUMBER_KEY + "\":" + playerNo + ",");
@@ -1283,7 +1285,10 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
                 mOmiGameView.mOmiHand.setShuffledPlayerNo(playerNo);
                 mOmiGameView.mOmiGameStat.setLastShuffledPlayerNo(playerNo);
 
-                if (mOmiGameView != null) mOmiGameView.playerShufflingPack(null, btDataPacket);
+                OmiPlayer omiPlayer = new OmiPlayer();
+                omiPlayer.setPlayerNo(playerNo);
+
+                if (mOmiGameView != null) mOmiGameView.playerShufflingPack(omiPlayer, btDataPacket);
             }
             break;
             case Constants.OpCodes.OPCODE_CARDS_AVAILABLE :

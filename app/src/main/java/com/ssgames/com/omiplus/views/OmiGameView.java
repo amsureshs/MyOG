@@ -113,6 +113,8 @@ public class OmiGameView extends LinearLayout {
     public int myPlayerNo = 0;
     public int myTeam = 0;
 
+    private int startedPlayerNo = 0;
+
     public OmiGameStat mOmiGameStat = null;
     public OmiHand mOmiHand = null;
     public OmiRound mOmiRound = null;
@@ -171,6 +173,9 @@ public class OmiGameView extends LinearLayout {
             myTeam = 2;
         }
 
+        Log.v(TAG, "My myPlayerNo: " + myPlayerNo);
+        Log.v(TAG, "Player myTeam: " + myTeam);
+
         switch (myPlayerNo) {
             case 1:
                 playerName1.setText(player1);
@@ -205,11 +210,19 @@ public class OmiGameView extends LinearLayout {
     public void cmdShuffleThePack() {
         iDidTheAction = true;
         if (mPack == null) initPack();
-
+        startedPlayerNo = myPlayerNo;
         shuffleLayout.setVisibility(View.VISIBLE);
     }
 
     public void playerShufflingPack(OmiPlayer omiPlayer, BTDataPacket btDataPacket) {
+
+        if (omiPlayer.getPlayerNo() == 4) {
+            startedPlayerNo = 1;
+        }else {
+            startedPlayerNo = omiPlayer.getPlayerNo() + 1;
+        }
+
+
         String playerName = "";
         if (omiPlayer != null) {
             playerName = omiPlayer.getNickName();
@@ -429,21 +442,18 @@ public class OmiGameView extends LinearLayout {
             if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.firstCardSetAppear();
         }
 
-        //TODO TEST
-        cmdSelectTrumps();
+        int trumpSelPlayerNo = mOmiHand.getShuffledPlayerNo() + 1;
+        if (mOmiHand.getShuffledPlayerNo() == 4) {
+            trumpSelPlayerNo = 1;
+        }
 
-//        int trumpSelPlayerNo = mOmiHand.getShuffledPlayerNo() + 1;
-//        if (mOmiHand.getShuffledPlayerNo() == 4) {
-//            trumpSelPlayerNo = 1;
-//        }
-//
-//        if (trumpSelPlayerNo == myPlayerNo) {
-//            cmdSelectTrumps();
-//        }else {
-//            OmiPlayer omiPlayer = new OmiPlayer();
-//            omiPlayer.setPlayerNo(trumpSelPlayerNo);
-//            playerSelectingTrumps(omiPlayer);
-//        }
+        if (trumpSelPlayerNo == myPlayerNo) {
+            cmdSelectTrumps();
+        }else {
+            OmiPlayer omiPlayer = new OmiPlayer();
+            omiPlayer.setPlayerNo(trumpSelPlayerNo);
+            playerSelectingTrumps(omiPlayer);
+        }
     }
 
     public void cmdSelectTrumps() {
@@ -574,8 +584,7 @@ public class OmiGameView extends LinearLayout {
 
     public void playerSelectedTrumps(int suitNo, int option) {
 
-        //TODO TEST
-        //mOmiHand.setTrumps(suitNo);
+        mOmiHand.setTrumps(suitNo);
 
         if (iDidTheAction) {
             if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.playerDidSelectTrumps(suitNo, option);
@@ -765,9 +774,7 @@ public class OmiGameView extends LinearLayout {
         return new OmiCard.OmiCardListener() {
             @Override
             public void cardSelected(OmiCard card, int option) {
-                if (lastPlayNo == 4) lastPlayNo = 0;
-                lastPlayNo++;
-                playerPlayedWithOption(lastPlayNo, card.getCardNo(), option);
+                playerPlayedWithOption(myPlayerNo, card.getCardNo(), option);
             }
         };
     }
@@ -1016,31 +1023,26 @@ public class OmiGameView extends LinearLayout {
     //this is call after current player played or on command
     private void playerPlayedWithOption(final int playerNo, final int cardNo, final int option) {
 
-        //TODO TEST
+        if (mOmiRound == null) {
+            mOmiRound = new OmiRound();
+            mOmiRound.setTrumps(mOmiHand.getTrumps());
+            mOmiRound.setSuit(getSuitOfCard(cardNo));
+            mOmiRound.setStartedPlayerNo(startedPlayerNo);
 
-//        if (mOmiRound == null) {
-//            mOmiRound = new OmiRound();
-//            mOmiRound.setTrumps(mOmiHand.getTrumps());
-//            mOmiRound.setSuit(getSuitOfCard(cardNo));
-//
-//            OmiRound lastRound = mOmiHand.getCurrentRound();
-//
-//            if (lastRound == null) {
-//                mOmiRound.setRoundNo(1);
-//                mOmiHand.setCurrentRound(mOmiRound);
-//                mOmiHand.setLastRound(mOmiRound);
-//            }else {
-//                mOmiRound.setRoundNo(lastRound.getRoundNo() + 1);
-//                mOmiHand.setCurrentRound(mOmiRound);
-//                mOmiHand.setLastRound(lastRound);
-//            }
-//        }
-//
-//        if (mOmiRound.getStartedPlayerNo() == 0) {
-//            mOmiRound.setStartedPlayerNo(myPlayerNo);
-//        }
-//
-//        mOmiRound.setPlayerCard(myPlayerNo, cardNo);
+            OmiRound lastRound = mOmiHand.getCurrentRound();
+
+            if (lastRound == null) {
+                mOmiRound.setRoundNo(1);
+                mOmiHand.setCurrentRound(mOmiRound);
+                mOmiHand.setLastRound(mOmiRound);
+            }else {
+                mOmiRound.setRoundNo(lastRound.getRoundNo() + 1);
+                mOmiHand.setCurrentRound(mOmiRound);
+                mOmiHand.setLastRound(lastRound);
+            }
+        }
+
+        mOmiRound.setPlayerCard(myPlayerNo, cardNo);
 
         if (iDidTheAction) {
             if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.playerDidPlayCard(cardNo, option);
@@ -1204,7 +1206,7 @@ public class OmiGameView extends LinearLayout {
                 btnPlayedCard4.setVisibility(VISIBLE);
             }
 
-            test(playerNo);
+            playCardAnimationEnd();
 
             return;
         }
@@ -1252,8 +1254,7 @@ public class OmiGameView extends LinearLayout {
                     btnPlayedCard4.setVisibility(VISIBLE);
                 }
 
-                //playCardAnimationEnd();
-                test(playerNo);
+                playCardAnimationEnd();
             }
 
             @Override
@@ -1262,26 +1263,6 @@ public class OmiGameView extends LinearLayout {
             }
         });
         omiCard.startAnimation(rotateAnimation);
-
-    }
-
-    private void test(int playerNo) {
-        if (playerNo != 4) {
-            return;
-        }
-
-        showRoundWinAnimation(4);
-
-//        animationLayout.setVisibility(View.VISIBLE);
-//        animationLayout.post(new Runnable() {
-//            @Override
-//            public void run() {
-//                for (int i = 0; i < animationLayout.getChildCount(); i++) {
-//                    View v = animationLayout.getChildAt(i);
-//                    v.setVisibility(View.VISIBLE);
-//                }
-//            }
-//        });
 
     }
 
@@ -1314,6 +1295,11 @@ public class OmiGameView extends LinearLayout {
 
         } else {
             int nextPlayer = mOmiRound.getNextPlayer();
+
+            Log.v(TAG, "my No: " + myPlayerNo);
+            Log.v(TAG, "nextPlayer No: " + nextPlayer);
+            Log.v(TAG, "Hand suit: " + mOmiRound.getSuit());
+
             if (nextPlayer == myPlayerNo) {
                 enablePlayCards(true, mOmiRound.getSuit());
             }else {
@@ -1387,7 +1373,7 @@ public class OmiGameView extends LinearLayout {
 
                             if (endAnim) {
                                 animationLayout.setVisibility(View.GONE);
-                                //showingRoundWinAnimationEnd(winner);
+                                showingRoundWinAnimationEnd(winner);
                             }
                         }
 
@@ -1452,9 +1438,6 @@ public class OmiGameView extends LinearLayout {
     private void init(Context context, OmiGameViewListener omiGameViewListener) {
         mContext = context;
         mOMOmiGameViewListener = omiGameViewListener;
-        //TODO TEST Game
-        mOMOmiGameViewListener = null;
-        myPlayerNo = 1;
 
         mOmiGameStat = new OmiGameStat();
         View inflater = LayoutInflater.from(context).inflate(R.layout.view_game, this, true);
@@ -1556,10 +1539,10 @@ public class OmiGameView extends LinearLayout {
         btnShowChat.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO TEST
-                cmdShuffleThePack();
+
             }
         });
+        btnShowChat.setVisibility(View.INVISIBLE);
 
         cardsLayout = (RelativeLayout)inflater.findViewById(R.id.cardsLayout);
         cardsLayout.setVisibility(View.VISIBLE);

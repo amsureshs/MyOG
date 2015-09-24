@@ -163,10 +163,6 @@ public class OmiRound {
 
     public int getNextPlayer() {
 
-        if (player1Card != 0 && player2Card != 0 && player3Card != 0 && player4Card != 0) {
-            return 0;
-        }
-
         switch (startedPlayerNo) {
             case 1:
             {
@@ -200,7 +196,7 @@ public class OmiRound {
                 break;
         }
 
-        return 0;
+        return 2;
     }
 
 }
