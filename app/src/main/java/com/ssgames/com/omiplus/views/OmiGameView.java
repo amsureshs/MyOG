@@ -210,7 +210,11 @@ public class OmiGameView extends LinearLayout {
     public void cmdShuffleThePack() {
         iDidTheAction = true;
         if (mPack == null) initPack();
-        startedPlayerNo = myPlayerNo;
+        if (myPlayerNo == 4) {
+            startedPlayerNo = 1;
+        }else {
+            startedPlayerNo = myPlayerNo + 1;
+        }
         shuffleLayout.setVisibility(View.VISIBLE);
     }
 
@@ -1010,11 +1014,21 @@ public class OmiGameView extends LinearLayout {
                 omiCard.enableCard(enable);
             }
         }else {
+
+            boolean suitFound = false;
+
             for (OmiCard omiCard: omiCards) {
                 if (omiCard.getSuit() == suitNo) {
                     omiCard.enableCard(enable);
+                    suitFound = true;
                 }else {
                     omiCard.enableCard(false);
+                }
+            }
+
+            if (!suitFound) {
+                for (OmiCard omiCard: omiCards) {
+                    omiCard.enableCard(enable);
                 }
             }
         }
@@ -1411,8 +1425,9 @@ public class OmiGameView extends LinearLayout {
             }
         }else {
             updateWinHands();
+            mOmiRound = null;
+            startedPlayerNo = winner;
             if (winner == myPlayerNo) {
-                mOmiRound = null;
                 enablePlayCards(true, 0);
             }else {
                 enablePlayCards(false, 0);
