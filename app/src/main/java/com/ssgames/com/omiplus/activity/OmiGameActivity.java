@@ -82,6 +82,11 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
     private boolean isGameStarted = false;
     private boolean isWinCalled = false;
 
+    private boolean player1End = false;
+    private boolean player2End = false;
+    private boolean player3End = false;
+    private boolean player4End = false;
+
     /*
 	 * Bluetooth broadcast receiver
 	 */
@@ -1183,6 +1188,22 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
         }
     }
 
+    private void handEndAnimationReceived(int playerNo) {
+
+        if (playerNo == 1) player1End = true;
+        if (playerNo == 2) player2End = true;
+        if (playerNo == 3) player3End = true;
+        if (playerNo == 4) player4End = true;
+
+        if (player1End && player2End && player3End && player4End) {
+            player1End = false;
+            player2End = false;
+            player3End = false;
+            player4End = false;
+            sendShuffleCommands();
+        }
+    }
+
 
     //Host data handling
     private void handleReceivedData(BTConnection btConnection,  byte[] buffer) {
@@ -1242,6 +1263,15 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
                 playerPlayedCard(omiPlayer, btDataPacket);
             }
             break;
+
+            case Constants.OpCodes.OPCODE_HAND_WON_ANIM_END :
+            {
+                JSONObject bodyJson = btDataPacket.getBodyAsJson();
+                int playerNo = bodyJson.optInt(Constants.OmiJsonKey.PLAYER_NUMBER_KEY);
+                handEndAnimationReceived(playerNo);
+            }
+            break;
+
             default:
                 break;
         }
@@ -1574,7 +1604,18 @@ public class OmiGameActivity extends Activity implements BTConnectionListener , 
     @Override
     public void timeToNextHand() {
         if (mIsHostGame) {
-            sendShuffleCommands();
+            handEndAnimationReceived(1);
+        }else {
+
+            BTDataPacket btDataPacket = new BTDataPacket();
+            btDataPacket.setOpCode(Constants.OpCodes.OPCODE_HAND_WON_ANIM_END);
+
+            StringBuilder stringBuilderBody = new StringBuilder("{");
+            stringBuilderBody.append("\"" + Constants.OmiJsonKey.PLAYER_NUMBER_KEY + "\":" + mOmiGameView.myPlayerNo + "}");
+            String jsonBody = stringBuilderBody.toString();
+            btDataPacket.setBody(jsonBody);
+
+            sendDataToHost(btDataPacket);
         }
     }
 

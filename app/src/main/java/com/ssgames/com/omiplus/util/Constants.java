@@ -38,6 +38,7 @@ public class Constants {
         public static final int OPCODE_PLAYER_SELECTED_TRUMPS = 9;
         public static final int OPCODE_PLAYER_PLAYED_CARD = 10;
         public static final int OPCODE_PLAYER_WON_HAND = 11;
+        public static final int OPCODE_HAND_WON_ANIM_END = 12;
     }
 
 //    public enum OmiSuit {

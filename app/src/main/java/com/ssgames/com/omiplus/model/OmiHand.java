@@ -1,11 +1,17 @@
 package com.ssgames.com.omiplus.model;
 
+import android.util.Log;
+
 import com.ssgames.com.omiplus.util.Constants;
+import com.ssgames.com.omiplus.views.OmiCard;
 
 /**
  * Created by sura on 9/5/15.
  */
 public class OmiHand {
+
+    private  static final String TAG = OmiHand.class.getSimpleName();
+
     private int trumps = Constants.OmiSuit.NONE;
     private int shuffledPlayerNo = 0;
     private OmiRound currentRound = null;
@@ -112,7 +118,13 @@ public class OmiHand {
         if (pack == null) pack = new int[32];
 
         int roundNo = currentRound.getRoundNo();
+
+        Log.v(TAG, "addLastRoundToPack roundNo: " + roundNo);
+
         int startIndex = (roundNo - 1) * 4;
+
+        Log.v(TAG, "addLastRoundToPack startIndex: " + startIndex);
+
         switch (currentRound.getStartedPlayerNo()) {
             case 1:
                 pack[startIndex] = currentRound.getPlayer1Card();

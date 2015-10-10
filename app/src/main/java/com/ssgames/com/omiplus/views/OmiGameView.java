@@ -1043,6 +1043,8 @@ public class OmiGameView extends LinearLayout {
             mOmiRound.setSuit(getSuitOfCard(cardNo));
             mOmiRound.setStartedPlayerNo(startedPlayerNo);
 
+            Log.v(TAG, "startedPlayerNo " + startedPlayerNo);
+
             OmiRound lastRound = mOmiHand.getCurrentRound();
 
             if (lastRound == null) {
@@ -1056,7 +1058,7 @@ public class OmiGameView extends LinearLayout {
             }
         }
 
-        mOmiRound.setPlayerCard(myPlayerNo, cardNo);
+        mOmiRound.setPlayerCard(playerNo, cardNo);
 
         if (iDidTheAction) {
             if (mOMOmiGameViewListener != null) mOMOmiGameViewListener.playerDidPlayCard(cardNo, option);
@@ -1085,7 +1087,10 @@ public class OmiGameView extends LinearLayout {
         });
     }
 
-    private void showCardSelectedAnimation(final int playerNo, int cardNo, final int option) {
+    private void showCardSelectedAnimation(int playerNoTemp, int cardNo, final int option) {
+
+        final int playerNo = getPlayerNoRespectToMe(playerNoTemp);
+
 
         float lW = animationLayout.getWidth();
         float lH = animationLayout.getHeight();
@@ -1280,6 +1285,7 @@ public class OmiGameView extends LinearLayout {
 
     }
 
+    //Command from host
     public void playerPlayedCard(OmiPlayer omiPlayer, BTDataPacket btDataPacket) {
 
         JSONObject bodyJson = btDataPacket.getBodyAsJson();
@@ -1298,7 +1304,13 @@ public class OmiGameView extends LinearLayout {
 
     private void judgeGame() {
         if (mOmiRound.didAllPlayersPlay()) {
+
+            Log.v(TAG, "mOmiRound didAllPlayersPlayed");
+
             int winner = mOmiRound.getWinner();
+
+            Log.v(TAG, "winner: " + winner);
+
             mOmiHand.addWinToPlayer(winner);
             mOmiHand.addLastRoundToPack();
             updatePack();
@@ -1322,7 +1334,9 @@ public class OmiGameView extends LinearLayout {
         }
     }
 
-    private void showRoundWinAnimation(final int winner) {
+    private void showRoundWinAnimation(final int winnerOri) {
+
+        final int winner = getPlayerNoRespectToMe(winnerOri);
 
         animationLayout.setVisibility(View.VISIBLE);
         animationLayout.post(new Runnable() {
@@ -1387,7 +1401,7 @@ public class OmiGameView extends LinearLayout {
 
                             if (endAnim) {
                                 animationLayout.setVisibility(View.GONE);
-                                showingRoundWinAnimationEnd(winner);
+                                showingRoundWinAnimationEnd(winnerOri);
                             }
                         }
 
@@ -1404,7 +1418,16 @@ public class OmiGameView extends LinearLayout {
     }
 
     private void showingRoundWinAnimationEnd(int winner) {
+
+        Log.v(TAG, "Wins player 1: " + mOmiHand.getPlayer1Wins());
+        Log.v(TAG, "Wins player 2: " + mOmiHand.getPlayer2Wins());
+        Log.v(TAG, "Wins player 3: " + mOmiHand.getPlayer3Wins());
+        Log.v(TAG, "Wins player 4: " + mOmiHand.getPlayer4Wins());
+
         if (mOmiHand.isHandOver()) {
+
+            Log.v(TAG, "mOmiHand isHandOver");
+
             updateWinHands();
             int winningTeam = mOmiHand.getWinningTeam();
             if (winningTeam == 1) {
@@ -1423,9 +1446,14 @@ public class OmiGameView extends LinearLayout {
             }else if (endReach == 2) {//team 2 win
                 showWinningScreen(2);
             }
+            startedPlayerNo = winner;
+            mOmiRound = null;
+
         }else {
+            Log.v(TAG, "mOmiHand not isHandOver");
             updateWinHands();
             mOmiRound = null;
+            Log.v(TAG, "started new round: " + winner);
             startedPlayerNo = winner;
             if (winner == myPlayerNo) {
                 enablePlayCards(true, 0);
@@ -1436,10 +1464,27 @@ public class OmiGameView extends LinearLayout {
     }
 
     private void updateWinHands() {
-        txtWon1.setText("Won " + mOmiHand.getPlayer1Wins());
-        txtWon2.setText("Won " + mOmiHand.getPlayer2Wins());
-        txtWon3.setText("Won " + mOmiHand.getPlayer3Wins());
-        txtWon4.setText("Won " + mOmiHand.getPlayer4Wins());
+        if (myPlayerNo == 1) {
+            txtWon1.setText("Won " + mOmiHand.getPlayer1Wins());
+            txtWon2.setText("Won " + mOmiHand.getPlayer2Wins());
+            txtWon3.setText("Won " + mOmiHand.getPlayer3Wins());
+            txtWon4.setText("Won " + mOmiHand.getPlayer4Wins());
+        }else if (myPlayerNo == 2) {
+            txtWon1.setText("Won " + mOmiHand.getPlayer2Wins());
+            txtWon2.setText("Won " + mOmiHand.getPlayer3Wins());
+            txtWon3.setText("Won " + mOmiHand.getPlayer4Wins());
+            txtWon4.setText("Won " + mOmiHand.getPlayer1Wins());
+        }else if (myPlayerNo == 3) {
+            txtWon1.setText("Won " + mOmiHand.getPlayer3Wins());
+            txtWon2.setText("Won " + mOmiHand.getPlayer4Wins());
+            txtWon3.setText("Won " + mOmiHand.getPlayer1Wins());
+            txtWon4.setText("Won " + mOmiHand.getPlayer2Wins());
+        }else {
+            txtWon1.setText("Won " + mOmiHand.getPlayer4Wins());
+            txtWon2.setText("Won " + mOmiHand.getPlayer1Wins());
+            txtWon3.setText("Won " + mOmiHand.getPlayer2Wins());
+            txtWon4.setText("Won " + mOmiHand.getPlayer3Wins());
+        }
     }
 
     private void showWinningScreen(int team) {
@@ -1725,6 +1770,9 @@ public class OmiGameView extends LinearLayout {
     }
 
     private String getPlayerNameOf(int playerNo) {
+
+        playerNo = getPlayerNoRespectToMe(playerNo);
+
         String name = "";
         switch (playerNo) {
             case 1:
@@ -1744,6 +1792,18 @@ public class OmiGameView extends LinearLayout {
         }
 
         return name;
+    }
+
+    private int getPlayerNoRespectToMe(int playerNO) {
+        int playerNoRespToMe;
+
+        if (playerNO >= myPlayerNo) {
+            playerNoRespToMe = playerNO - myPlayerNo + 1;
+        }else {
+            playerNoRespToMe = 4 - myPlayerNo + playerNO + 1;
+        }
+
+        return playerNoRespToMe;
     }
 
     private int getSuitOfCard(int cardNo) {
